@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -53,27 +53,9 @@ jobs:
           zip -r ./release/bot-linux-v${{ env.VERSION }}.zip bot
           echo "Linux build and release complete."
 
-  bump_ver:
-    runs-on: ubuntu-latest  # Выполняем на Ubuntu, так как увеличение версии не зависит от ОС
-    needs: [release_win, release_linux]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Bump version
-        run: |
-          echo "Bumping version..."
-          bump2version patch --allow-dirty
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pyproject.toml
-          git commit -m "Bump version [skip ci]"
-          git tag v$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          git push origin main --tags
-
   publish_release:
     runs-on: ubuntu-latest
-    needs: [bump_ver]
+    needs: [release_linux, release_win]
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'  
     steps:
       - name: Checkout code

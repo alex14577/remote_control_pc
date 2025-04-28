@@ -1,0 +1,38 @@
+name: Build for Windows
+
+on:
+  push:
+    branches-ignore:
+      - main  # не запускать на main
+
+jobs:
+  build_windows:
+    runs-on: windows-latest  # Указываем, что это только для Windows
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build Agent and Bot for Windows
+        run: |
+          pyinstaller --onefile --name=agent.exe agent/__main__.py
+          pyinstaller --onefile --name=bot.exe bot/__main__.py
+
+      - name: Create Archives for Windows
+        run: |
+          mkdir release
+          cd dist
+          powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows-v${{ env.VERSION }}.zip
+          powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows-v${{ env.VERSION }}.zip
+          cd ..

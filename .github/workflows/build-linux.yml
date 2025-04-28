@@ -1,0 +1,38 @@
+name: Build for Linux
+
+on:
+  push:
+    branches-ignore:
+      - main  # не запускать на main
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-22.04  # Указываем, что это только для Linux
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build Agent and Bot for Linux
+        run: |
+          pyinstaller --onefile --name=agent agent/__main__.py
+          pyinstaller --onefile --name=bot bot/__main__.py
+
+      - name: Create Archives for Linux
+        run: |
+          mkdir release
+          cd dist
+          zip -r ../release/agent-linux-v${{ env.VERSION }}.zip agent
+          zip -r ../release/bot-linux-v${{ env.VERSION }}.zip bot
+          cd ..

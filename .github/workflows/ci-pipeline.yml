@@ -1,0 +1,80 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Запускать на пуш в main
+  pull_request:
+    branches:
+      - main  # Запускать при создании Pull Request в main
+
+jobs:
+  # Шаг 1: Увеличение версии
+  bump_ver:
+    runs-on: ubuntu-latest  # Выполняем на Ubuntu, так как увеличение версии не зависит от ОС
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Bump version
+        run: |
+          echo "Bumping version..."
+          bump2version patch --allow-dirty
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add pyproject.toml
+          git commit -m "Bump version [skip ci]"
+          git tag v$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
+          git push origin main --tags
+
+  # Шаг 2: Сборка для Windows
+  release_win:
+    runs-on: windows-latest  # Выполняем на Windows
+    needs: bump_ver  # Этот шаг выполнится только после успешного увеличения версии
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and release for Windows
+        run: |
+          pyinstaller --onefile --name=agent.exe agent/__main__.py
+          pyinstaller --onefile --name=bot.exe bot/__main__.py
+          powershell Compress-Archive -Path agent.exe -DestinationPath ./release/agent-windows-v${{ env.VERSION }}.zip
+          powershell Compress-Archive -Path bot.exe -DestinationPath ./release/bot-windows-v${{ env.VERSION }}.zip
+          echo "Windows build and release complete."
+
+  # Шаг 3: Сборка для Linux
+  release_linux:
+    runs-on: ubuntu-latest  # Выполняем на Ubuntu
+    needs: bump_ver  # Этот шаг выполнится только после успешного увеличения версии
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and release for Linux
+        run: |
+          pyinstaller --onefile --name=agent agent/__main__.py
+          pyinstaller --onefile --name=bot bot/__main__.py
+          zip -r ./release/agent-linux-v${{ env.VERSION }}.zip agent
+          zip -r ./release/bot-linux-v${{ env.VERSION }}.zip bot
+          echo "Linux build and release complete."
+
+  # Шаг 4: Публикация релиза (только при слиянии PR в main)
+  publish_release:
+    runs-on: ubuntu-latest
+    needs: [release_win, release_linux]  # Этот шаг будет выполнен после успешных сборок для обеих платформ
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'  # Проверка, что PR был слит в main
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Publish Release on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/agent-windows-v${{ env.VERSION }}.zip
+            release/bot-windows-v${{ env.VERSION }}.zip
+            release/agent-linux-v${{ env.VERSION }}.zip
+            release/bot-linux-v${{ env.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

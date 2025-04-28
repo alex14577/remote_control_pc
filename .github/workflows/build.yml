@@ -1,0 +1,47 @@
+name: Build on Push (Non-Main Branches)
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build Agent and Bot
+        run: |
+          pyinstaller --onefile --name=agent.exe agent/__main__.py || pyinstaller --onefile --name=agent agent/__main__.py
+          pyinstaller --onefile --name=bot.exe bot/__main__.py || pyinstaller --onefile --name=bot bot/__main__.py
+
+      - name: Archive built files
+        run: |
+          mkdir release
+          cd dist
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows.zip
+            powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows.zip
+          else
+            zip ../release/agent-linux.zip agent
+            zip ../release/bot-linux.zip bot
+          fi
+          cd ..

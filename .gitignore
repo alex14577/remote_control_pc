@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build/
+dist/
+*.spec
+*.egg-info/
+
+# IDE settings
+.vscode/
+
+# Test cache
+.pytest_cache/
+
+# Release artifacts
+release/

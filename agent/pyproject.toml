@@ -1,0 +1,21 @@
+[project]
+name = "pc-control-agent"
+version = "0.1.0"
+description = "Agent component for PC Control Bot"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Morgan", email = "alexanc40@gmail.com" }
+]
+license = "MIT"
+dependencies = [
+  "websockets>=15.0.1",
+  "psutil>=7.0.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent"]
+
+[project.scripts]
+pc-agent = "agent.__main__:main"

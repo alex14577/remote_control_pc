@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pc-control-bot"
+version = "0.1.0"
+description = "Telegram bot and PC agent for remote control"
+authors = [
+  { name = "Morgan", email = "alexanc40@gmail.com" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "python-telegram-bot>=22.0",
+  "websockets>=11.0",
+  "nest_asyncio",
+  "pyyaml",
+  "psutil",
+  "platformdirs",
+  "requests"
+]
+
+[project.scripts]
+pc-bot = "bot.__main__:main"
+pc-agent = "agent.__main__:main"

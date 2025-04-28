@@ -35,13 +35,25 @@ jobs:
 
       - name: Archive built files
         run: |
-          mkdir release
-          cd dist
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows.zip
-            powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows.zip
-          else
-            zip ../release/agent-linux.zip agent
-            zip ../release/bot-linux.zip bot
-          fi
-          cd ..
+            mkdir release
+            cd dist
+            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows-v${{ env.VERSION }}.zip
+            powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows-v${{ env.VERSION }}.zip
+            else
+            # На Linux проверяем, что файл существует перед упаковкой
+            if [ -f "agent" ]; then
+                zip -r ../release/agent-linux-v${{ env.VERSION }}.zip agent
+            else
+                echo "Error: agent file not found!"
+                exit 1
+            fi
+
+            if [ -f "bot" ]; then
+                zip -r ../release/bot-linux-v${{ env.VERSION }}.zip bot
+            else
+                echo "Error: bot file not found!"
+                exit 1
+            fi
+            fi
+            cd ..

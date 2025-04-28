@@ -59,11 +59,10 @@ jobs:
           zip -r ./release/bot-linux-v${{ env.VERSION }}.zip bot
           echo "Linux build and release complete."
 
-  # Шаг 4: Публикация релиза (только при слиянии PR в main)
   publish_release:
     runs-on: ubuntu-latest
-    needs: [release_win, release_linux]  # Этот шаг будет выполнен после успешных сборок для обеих платформ
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'  # Проверка, что PR был слит в main
+    needs: [release_win, release_linux]
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'  
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

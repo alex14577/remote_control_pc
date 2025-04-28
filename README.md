@@ -1,4 +1,5 @@
 # PC Control Bot
+Version: 0.1.0
 
 **PC Control Bot** — это Telegram-бот и агент для удалённого управления вашим ПК.
 

@@ -3,15 +3,15 @@ name: Build on Push (Non-Main Branches)
 on:
   push:
     branches-ignore:
-      - main
+      - main  # не запускать на main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-22.04]
+        os: [windows-latest, ubuntu-22.04]  # Параллельная сборка для Windows и Ubuntu
+
+    runs-on: ${{ matrix.os }}  # На каждой платформе из matrix будет выполняться свой job
 
     steps:
       - name: Checkout code
@@ -28,37 +28,42 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build Agent and Bot
+      # Сборка для Windows и Linux
+      - name: Build Agent and Bot for ${{ matrix.os }}
         run: |
-          pyinstaller --onefile --name=agent.exe agent/__main__.py || pyinstaller --onefile --name=agent agent/__main__.py
-          pyinstaller --onefile --name=bot.exe bot/__main__.py || pyinstaller --onefile --name=bot bot/__main__.py
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            pyinstaller --onefile --name=agent.exe agent/__main__.py
+            pyinstaller --onefile --name=bot.exe bot/__main__.py
+          else
+            pyinstaller --onefile --name=agent agent/__main__.py
+            pyinstaller --onefile --name=bot bot/__main__.py
 
-          - name: Create Archives
-          run: |
-            mkdir release
-            cd dist
-            # Проверим, что файл создан
-            echo "Listing files in dist/ directory:"
-            ls -l
-        
-            # На Windows
-            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-              powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows-v${{ env.VERSION }}.zip
-              powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows-v${{ env.VERSION }}.zip
+      # Создание архивов
+      - name: Create Archives
+        run: |
+          mkdir release
+          cd dist
+          # Проверим, что файл существует перед упаковкой
+          echo "Listing files in dist/ directory:"
+          ls -l
+
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            powershell Compress-Archive -Path agent.exe -DestinationPath ../release/agent-windows-v${{ env.VERSION }}.zip
+            powershell Compress-Archive -Path bot.exe -DestinationPath ../release/bot-windows-v${{ env.VERSION }}.zip
+          else
+            # На Linux проверяем, что файлы существуют перед упаковкой
+            if [ -f "agent" ]; then
+                zip -r ../release/agent-linux-v${{ env.VERSION }}.zip agent
             else
-              # На Linux проверяем, что файл существует перед упаковкой
-              if [ -f "agent" ]; then
-                  zip -r ../release/agent-linux-v${{ env.VERSION }}.zip agent
-              else
-                  echo "Error: agent file not found!"
-                  exit 1
-              fi
-              
-              if [ -f "bot" ]; then
-                  zip -r ../release/bot-linux-v${{ env.VERSION }}.zip bot
-              else
-                  echo "Error: bot file not found!"
-                  exit 1
-              fi
+                echo "Error: agent file not found!"
+                exit 1
             fi
-            cd ..
+            
+            if [ -f "bot" ]; then
+                zip -r ../release/bot-linux-v${{ env.VERSION }}.zip bot
+            else
+                echo "Error: bot file not found!"
+                exit 1
+            fi
+          fi
+          cd ..

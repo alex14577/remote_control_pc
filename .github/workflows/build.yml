@@ -32,11 +32,11 @@ jobs:
       - name: Build Agent and Bot for ${{ matrix.os }}
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Для Windows создаем .exe файлы
+            # Для Windows создаём .exe файлы
             pyinstaller --onefile --name=agent.exe agent/__main__.py
             pyinstaller --onefile --name=bot.exe bot/__main__.py
           elif [[ "${{ matrix.os }}" == "ubuntu-22.04" ]]; then
-            # Для Linux создаем бинарники без .exe
+            # Для Linux создаём бинарники без .exe
             pyinstaller --onefile --name=agent agent/__main__.py
             pyinstaller --onefile --name=bot bot/__main__.py
           else

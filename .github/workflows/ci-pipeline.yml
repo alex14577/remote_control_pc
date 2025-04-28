@@ -43,7 +43,6 @@ jobs:
           powershell Compress-Archive -Path bot.exe -DestinationPath ./release/bot-windows-v${{ env.VERSION }}.zip
           echo "Windows build and release complete."
 
-  # Шаг 3: Сборка для Linux
   release_linux:
     runs-on: ubuntu-latest  # Выполняем на Ubuntu
     needs: bump_ver  # Этот шаг выполнится только после успешного увеличения версии

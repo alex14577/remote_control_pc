@@ -82,7 +82,7 @@ jobs:
 
       - name: Build and package for Linux
         if: runner.os == 'Linux'  # Условие для Linux
-          run: |
+        run: |
             echo "Starting the build process for Linux"
         
             # Для Linux создаём бинарники без .exe

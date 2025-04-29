@@ -9,7 +9,6 @@ on:
       - main  # Запускать при создании Pull Request в main
 
 jobs:
-  # Сборка для Windows и Linux
   build:
     runs-on: ${{ matrix.os }}  # Параллельная сборка для Windows и Linux
     strategy:
@@ -31,7 +30,7 @@ jobs:
           pip install pyinstaller
           pip install bump2version
           pip install -r requirements.txt
-        
+
       - name: Install fpm
         if: runner.os == 'Linux'
         run: |
@@ -80,6 +79,7 @@ jobs:
           move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
           echo "Windows build and release complete."
 
+      # Сборка для Linux
       - name: Build and package for Linux
         if: runner.os == 'Linux'  # Условие для Linux
         run: |
@@ -149,6 +149,7 @@ jobs:
         
             echo "Linux build and release complete."
         
+
 
   # Публикация релиза только при слиянии PR в main
   publish_release:

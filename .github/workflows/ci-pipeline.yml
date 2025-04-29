@@ -63,8 +63,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           mkdir release
-          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" .\installer\agent_installer.nsi /DVERSION=$env:VERSION
-          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" .\installer\bot_installer.nsi /DVERSION=$env:VERSION
+          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" .\installer\agent_installer.nsi /DVERSION=${{ env.VERSION }}
+          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" .\installer\bot_installer.nsi /DVERSION=${{ env.VERSION }}
 
           Get-ChildItem -Recurse 
           Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination ".\release\]"

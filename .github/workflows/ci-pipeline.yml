@@ -40,17 +40,19 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install nsis -y
 
-      - name: Set version environment variable
+      - name: Set version environment variable (Windows)
+        if: runner.os == 'Windows'
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            $version = (Select-String -Path pyproject.toml -Pattern '(?<=version = \")[^\"]*').Matches.Groups[0].Value
-            if (!$version) { Write-Error "Version not found!"; exit 1 }
-            echo "VERSION=$version" >> $Env:GITHUB_ENV
-          else
-            VERSION=$(grep -Po '(?<=version = \")[^\"]*' pyproject.toml)
-            if [ -z "$VERSION" ]; then echo "Version not found!"; exit 1; fi
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-          fi
+          $version = (Select-String -Path pyproject.toml -Pattern '(?<=version = \")[^\"]*').Matches.Groups[0].Value
+          if (!$version) { Write-Error "Version not found!"; exit 1 }
+          echo "VERSION=$version" >> $Env:GITHUB_ENV
+
+      - name: Set version environment variable (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          VERSION=$(grep -Po '(?<=version = \")[^\"]*' pyproject.toml)
+          if [ -z "$VERSION" ]; then echo "Version not found!"; exit 1; fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build executables
         run: |

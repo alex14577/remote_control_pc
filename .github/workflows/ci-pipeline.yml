@@ -43,7 +43,7 @@ jobs:
         if: runner.os == 'Windows'  # Условие для Windows
         run: |
           $version = (Select-String -Pattern '(?<=version = ")[^"]*' pyproject.toml).Matches.Groups[0].Value
-          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "VERSION=$version" >> $Env:GITHUB_ENV
           echo "Version set to: $version"
 
       - name: Set version environment variable for linux

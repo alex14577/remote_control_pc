@@ -59,6 +59,8 @@ jobs:
         run: |
           pyinstaller --onefile --name=agent.exe agent/__main__.py
           pyinstaller --onefile --name=bot.exe bot/__main__.py
+
+          echo version ${{ env.VERSION }} !!!
           
           # Установщик Windows с помощью NSIS для агента
           echo "!include 'MUI2.nsh'" > agent_installer.nsi

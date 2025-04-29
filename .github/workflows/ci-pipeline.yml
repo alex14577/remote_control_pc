@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

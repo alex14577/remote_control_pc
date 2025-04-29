@@ -53,87 +53,77 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "Version set to: ${{ env.VERSION }}"
 
-      # Сборка для Windows
       - name: Build and package for Windows
         if: runner.os == 'Windows'  # Условие для Windows
         run: |
-          pyinstaller --onefile --name=agent.exe agent/__main__.py
-          pyinstaller --onefile --name=bot.exe bot/__main__.py
-
-          echo version ${{ env.VERSION }} !!!
-
-          # Установщик Windows с помощью NSIS для агента
-          echo "!include 'MUI2.nsh'" > agent_installer.nsi
-          echo "Outfile 'installer-agent-windows-v${{ env.VERSION }}.exe'" >> agent_installer.nsi
-          echo "InstallDir \$TEMP" >> agent_installer.nsi
-
-          # Начало секции
-          echo "Section" >> agent_installer.nsi
-
-          # Устанавливаем путь для установки
-          echo "  SetOutPath \$INSTDIR" >> agent_installer.nsi
-          echo "  File dist\\agent.exe" >> agent_installer.nsi
-          echo "  File agent\\config.json" >> agent_installer.nsi  # Добавляем config.json
-
-          # Регистрируем путь
-          echo "  WriteRegStr HKLM 'SOFTWARE\\Agent' 'Path' '\$INSTDIR\\agent.exe'" >> agent_installer.nsi
-          echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\config.json'" >> agent_installer.nsi  # Запуск с аргументом
-
-          # Завершаем секцию
-          echo "SectionEnd" >> agent_installer.nsi
-
-          # Установщик Windows с помощью NSIS для бота
-          echo "!include 'MUI2.nsh'" > bot_installer.nsi
-          echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
-          echo "InstallDir \$TEMP" >> bot_installer.nsi
-
-          # Начало секции
-          echo "Section" >> bot_installer.nsi
-
-          # Устанавливаем путь для установки
-          echo "  SetOutPath \$INSTDIR" >> bot_installer.nsi
-          echo "  File dist\\bot.exe" >> bot_installer.nsi
-          echo "  File bot\\config.json" >> bot_installer.nsi  # Добавляем config.json
-
-          # Регистрируем путь
-          echo "  WriteRegStr HKLM 'SOFTWARE\\Bot' 'Path' '\$INSTDIR\\bot.exe'" >> bot_installer.nsi
-          echo "  ExecWait '\$INSTDIR\\bot.exe --config \$INSTDIR\\config.json'" >> bot_installer.nsi  # Запуск с аргументом
-
-          # Завершаем секцию
-          echo "SectionEnd" >> bot_installer.nsi
-
-          # Установщик Windows с помощью NSIS для бота
-          echo "!include 'MUI2.nsh'" > bot_installer.nsi
-          echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
-          echo "InstallDir \$TEMP" >> bot_installer.nsi
-          echo "Section" >> bot_installer.nsi
-          echo "  SetOutPath \$INSTDIR" >> bot_installer.nsi
-          echo "  File dist\\bot.exe" >> bot_installer.nsi
-          echo "  File bot\\config.json" >> bot_installer.nsi  # Добавляем config.json
-          echo "  WriteRegStr HKLM 'SOFTWARE\\Bot' 'Path' '\$INSTDIR\\bot.exe'" >> bot_installer.nsi
-          echo "  ExecWait '\$INSTDIR\\bot.exe --config \$INSTDIR\\config.json'" >> bot_installer.nsi  # Запуск с аргументом
-          echo "SectionEnd" >> bot_installer.nsi
-          
-          # Сборка установщиков с помощью NSIS
-          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
-          & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
-
-          # Проверим, существует ли файл, прежде чем перемещать
-          if (Test-Path "installer-agent-windows-v${{ env.VERSION }}.exe") {
-            Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
-          } else {
-            Write-Host "Error: installer-agent-windows-v${{ env.VERSION }}.exe not found!"
-            exit 1
-          }
-
-          if (Test-Path "installer-bot-windows-v${{ env.VERSION }}.exe") {
-            Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
-          } else {
-            Write-Host "Error: installer-bot-windows-v${{ env.VERSION }}.exe not found!"
-            exit 1
-          }
-          
-          echo "Windows build and release complete."
+            # Создание .exe файлов с помощью PyInstaller
+            pyinstaller --onefile --name=agent.exe agent/__main__.py
+            pyinstaller --onefile --name=bot.exe bot/__main__.py
+  
+            # Проверка версии
+            echo version ${{ env.VERSION }} !!!
+  
+            # Установщик Windows с помощью NSIS для агента
+            echo "!include 'MUI2.nsh'" > agent_installer.nsi
+            echo "Outfile 'installer-agent-windows-v${{ env.VERSION }}.exe'" >> agent_installer.nsi
+            echo "InstallDir \$TEMP" >> agent_installer.nsi
+  
+            # Начало секции для агента
+            echo "Section" >> agent_installer.nsi
+  
+            # Устанавливаем путь для установки
+            echo "  SetOutPath \$INSTDIR" >> agent_installer.nsi
+            echo "  File dist\\agent.exe" >> agent_installer.nsi
+            echo "  File agent\\config.json" >> agent_installer.nsi  # Добавляем config.json
+  
+            # Регистрируем путь
+            echo "  WriteRegStr HKLM 'SOFTWARE\\Agent' 'Path' '\$INSTDIR\\agent.exe'" >> agent_installer.nsi
+            echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\config.json'" >> agent_installer.nsi  # Запуск с аргументом
+  
+            # Завершаем секцию
+            echo "SectionEnd" >> agent_installer.nsi
+  
+            # Установщик Windows с помощью NSIS для бота
+            echo "!include 'MUI2.nsh'" > bot_installer.nsi
+            echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
+            echo "InstallDir \$TEMP" >> bot_installer.nsi
+  
+            # Начало секции для бота
+            echo "Section" >> bot_installer.nsi
+  
+            # Устанавливаем путь для установки
+            echo "  SetOutPath \$INSTDIR" >> bot_installer.nsi
+            echo "  File dist\\bot.exe" >> bot_installer.nsi
+            echo "  File bot\\config.json" >> bot_installer.nsi  # Добавляем config.json
+  
+            # Регистрируем путь
+            echo "  WriteRegStr HKLM 'SOFTWARE\\Bot' 'Path' '\$INSTDIR\\bot.exe'" >> bot_installer.nsi
+            echo "  ExecWait '\$INSTDIR\\bot.exe --config \$INSTDIR\\config.json'" >> bot_installer.nsi  # Запуск с аргументом
+  
+            # Завершаем секцию
+            echo "SectionEnd" >> bot_installer.nsi
+  
+            # Сборка установщиков с помощью NSIS
+            & "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
+            & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
+  
+            # Проверим, существует ли файл, прежде чем перемещать
+            if (Test-Path "installer-agent-windows-v${{ env.VERSION }}.exe") {
+              Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+            } else {
+              Write-Host "Error: installer-agent-windows-v${{ env.VERSION }}.exe not found!"
+              exit 1
+            }
+  
+            if (Test-Path "installer-bot-windows-v${{ env.VERSION }}.exe") {
+              Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+            } else {
+              Write-Host "Error: installer-bot-windows-v${{ env.VERSION }}.exe not found!"
+              exit 1
+            }
+            
+            echo "Windows build and release complete."
+  
 
 
       # Сборка для Linux

@@ -33,7 +33,7 @@ jobs:
           pip install -r requirements.txt- name: Install fpm
         
       - name: Install fpm
-        if: runner.os == 'Linux'  # Устанавливаем fpm только для Linux
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install ruby-dev  # Устанавливаем зависимости для fpm

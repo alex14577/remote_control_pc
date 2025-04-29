@@ -1,4 +1,7 @@
-python-telegram-bot==20.7
+python-telegram-bot>=22.0
 psutil
-websockets
+websockets>=11.0
 nest_asyncio
+pyyaml
+platformdirs
+requests

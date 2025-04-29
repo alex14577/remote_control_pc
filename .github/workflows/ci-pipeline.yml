@@ -90,6 +90,12 @@ jobs:
           mkdir -p release
           mv agent_${{ env.VERSION }}_amd64.deb release/
           mv bot_${{ env.VERSION }}_amd64.deb release/
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: release/*
 
   publish_release:
     runs-on: ubuntu-latest

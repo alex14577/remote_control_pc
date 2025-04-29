@@ -61,7 +61,7 @@ jobs:
           pyinstaller --onefile --name=bot.exe bot/__main__.py
 
           echo version ${{ env.VERSION }} !!!
-          
+
           # Установщик Windows с помощью NSIS для агента
           echo "!include 'MUI2.nsh'" > agent_installer.nsi
           echo "Outfile 'installer-agent-windows-v${{ env.VERSION }}.exe'" >> agent_installer.nsi
@@ -89,7 +89,6 @@ jobs:
           # Сборка установщиков с помощью NSIS
           & "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
           & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
-
 
           # Проверим, существует ли файл, прежде чем перемещать
           if (Test-Path "installer-agent-windows-v${{ env.VERSION }}.exe") {
@@ -174,7 +173,6 @@ jobs:
             mv bot_${{ env.VERSION }}_amd64.deb ./release/
         
             echo "Linux build and release complete."
-        
 
 
   # Публикация релиза только при слиянии PR в main

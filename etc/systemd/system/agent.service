@@ -1,0 +1,9 @@
+[Unit]
+Description=Agent Service
+
+[Service]
+ExecStart=/opt/agent/agent --config /opt/agent/config.json
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

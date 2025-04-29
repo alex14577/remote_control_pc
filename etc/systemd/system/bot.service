@@ -1,0 +1,9 @@
+[Unit]
+Description=Bot Service
+
+[Service]
+ExecStart=/opt/bot/bot
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

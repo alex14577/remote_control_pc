@@ -1,7 +1,6 @@
 !include "MUI2.nsh"
 
-!define VERSION "${VERSION}"
-!echo "VERSION=${VERSION}"
+!define VERSION "$%VERSION%"
 
 Outfile "installer-agent-windows-v${VERSION}.exe"
 InstallDir $TEMP

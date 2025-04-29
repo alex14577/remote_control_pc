@@ -31,6 +31,14 @@ jobs:
           pip install pyinstaller
           pip install bump2version
           pip install -r requirements.txt
+        
+      - name: Install fpm
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install ruby-dev  # Устанавливаем зависимости для fpm
+          sudo gem install --no-document fpm  # Устанавливаем fpm
+          echo "fpm installed"
 
       # Сборка для Windows
       - name: Build and package for Windows

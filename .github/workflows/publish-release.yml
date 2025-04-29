@@ -17,13 +17,11 @@ jobs:
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts-linux
           path: release
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts-windows
           path: release
 
       - name: Install bump2version
@@ -46,9 +44,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/installer-agent-windows-v*.exe
-            release/installer-bot-windows-v*.exe
-            release/agent-*_amd64.deb
-            release/bot-*_amd64.deb
+            release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

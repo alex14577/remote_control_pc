@@ -38,17 +38,65 @@ jobs:
             # Для Windows создаём .exe файлы
             pyinstaller --onefile --name=agent.exe agent/__main__.py
             pyinstaller --onefile --name=bot.exe bot/__main__.py
-            powershell Compress-Archive -Path agent.exe -DestinationPath ./release/agent-windows-v${{ env.VERSION }}.zip
-            powershell Compress-Archive -Path bot.exe -DestinationPath ./release/bot-windows-v${{ env.VERSION }}.zip
+            
+            # Установщик Windows с помощью NSIS для агента
+            echo "!include 'MUI2.nsh'" > agent_installer.nsi
+            echo "Outfile 'installer-agent-windows-v${{ env.VERSION }}.exe'" >> agent_installer.nsi
+            echo "InstallDir \$TEMP" >> agent_installer.nsi
+            echo "Section" >> agent_installer.nsi
+            echo "  SetOutPath \$INSTDIR" >> agent_installer.nsi
+            echo "  File dist\\agent.exe" >> agent_installer.nsi
+            echo "  File agent\config.json" >> agent_installer.nsi  # Добавляем config.json
+            echo "  WriteRegStr HKLM 'SOFTWARE\\Agent' 'Path' '\$INSTDIR\\agent.exe'" >> agent_installer.nsi
+            echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\config.json'" >> agent_installer.nsi  # Запуск с аргументом
+            echo "SectionEnd" >> agent_installer.nsi
+            
+            # Установщик Windows с помощью NSIS для бота
+            echo "!include 'MUI2.nsh'" > bot_installer.nsi
+            echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
+            echo "InstallDir \$TEMP" >> bot_installer.nsi
+            echo "Section" >> bot_installer.nsi
+            echo "  SetOutPath \$INSTDIR" >> bot_installer.nsi
+            echo "  File dist\\bot.exe" >> bot_installer.nsi
+            echo "  File bot\config.json" >> bot_installer.nsi  # Добавляем config.json
+            echo "  WriteRegStr HKLM 'SOFTWARE\\Bot' 'Path' '\$INSTDIR\\bot.exe'" >> bot_installer.nsi
+            echo "  ExecWait '\$INSTDIR\\bot.exe --config \$INSTDIR\\config.json'" >> bot_installer.nsi  # Запуск с аргументом
+            echo "SectionEnd" >> bot_installer.nsi
+            
+            # Сборка установщиков с помощью NSIS
+            C:\\Program Files (x86)\\NSIS\\makensis.exe agent_installer.nsi
+            C:\\Program Files (x86)\\NSIS\\makensis.exe bot_installer.nsi
+
+            # Перемещаем установщики в папку release
+            move /Y installer-agent-windows-v${{ env.VERSION }}.exe ./release/
+            move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
             echo "Windows build and release complete."
           elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             # Для Linux создаём бинарники без .exe
             pyinstaller --onefile --name=agent agent/__main__.py
             pyinstaller --onefile --name=bot bot/__main__.py
-            zip -r ./release/agent-linux-v${{ env.VERSION }}.zip agent
-            zip -r ./release/bot-linux-v${{ env.VERSION }}.zip bot
+            
+            # Используем fpm для упаковки в .deb
+            mkdir -p deb_pkg/opt/agent
+            cp dist/agent deb_pkg/opt/agent/
+            cp agent/config.json deb_pkg/opt/agent/
+
+            mkdir -p deb_pkg/opt/bot
+            cp dist/bot deb_pkg/opt/bot/
+            cp bot/config.json deb_pkg/opt/bot/
+
+            # Добавляем systemd сервисы для Linux
+            mkdir -p deb_pkg/etc/systemd/system
+            cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
+            cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
+
+            fpm -s dir -t deb -n agent -v ${env.VERSION} --prefix /opt/agent deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+            fpm -s dir -t deb -n bot -v ${env.VERSION} --prefix /opt/bot deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+
+            # Перемещаем deb файлы в release
+            mv agent-${env.VERSION}-1_amd64.deb ./release/
+            mv bot-${env.VERSION}-1_amd64.deb ./release/
             echo "Linux build and release complete."
-          fi
 
   # Публикация релиза только при слиянии PR в main
   publish_release:
@@ -74,9 +122,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/agent-windows-v${{ env.VERSION }}.zip
-            release/bot-windows-v${{ env.VERSION }}.zip
-            release/agent-linux-v${{ env.VERSION }}.zip
-            release/bot-linux-v${{ env.VERSION }}.zip
+            release/installer-agent-windows-v${{ env.VERSION }}.exe
+            release/installer-bot-windows-v${{ env.VERSION }}.exe
+            release/agent-${{ env.VERSION }}-1_amd64.deb
+            release/bot-${{ env.VERSION }}-1_amd64.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

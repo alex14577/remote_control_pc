@@ -47,11 +47,11 @@ jobs:
           echo "Version set to: $version"
 
       - name: Set version environment variable for linux
-        if: runner.os == 'Linux'  # Условие для Windows
+        if: runner.os == 'Linux'  # Условие для Linux
         run: |
           VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "Version set to: ${{ env.VERSION }}"
+          echo "Version set to: $VERSION"  # Используем локальную переменную
 
       - name: Build and package for Windows
         if: runner.os == 'Windows'  # Условие для Windows
@@ -59,167 +59,17 @@ jobs:
             # Создание .exe файлов с помощью PyInstaller
             pyinstaller --onefile --name=agent.exe agent/__main__.py
             pyinstaller --onefile --name=bot.exe bot/__main__.py
-  
+          
             # Проверка версии
-            echo version ${{ env.VERSION }} !!!
+            echo "version $env:VERSION !!!"
   
             # Установщик Windows с помощью NSIS для агента
             echo "!include 'MUI2.nsh'" > agent_installer.nsi
-            echo "Outfile 'installer-agent-windows-v${{ env.VERSION }}.exe'" >> agent_installer.nsi
+            echo "Outfile 'installer-agent-windows-v$env:VERSION.exe'" >> agent_installer.nsi
             echo "InstallDir \$TEMP" >> agent_installer.nsi
-  
-            # Начало секции для агента
             echo "Section" >> agent_installer.nsi
-  
-            # Устанавливаем путь для установки
             echo "  SetOutPath \$INSTDIR" >> agent_installer.nsi
             echo "  File dist\\agent.exe" >> agent_installer.nsi
-            echo "  File agent\\config.json" >> agent_installer.nsi  # Добавляем config.json
-  
-            # Регистрируем путь
+            echo "  File agent\\config.json" >> agent_installer.nsi
             echo "  WriteRegStr HKLM 'SOFTWARE\\Agent' 'Path' '\$INSTDIR\\agent.exe'" >> agent_installer.nsi
-            echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\config.json'" >> agent_installer.nsi  # Запуск с аргументом
-  
-            # Завершаем секцию
-            echo "SectionEnd" >> agent_installer.nsi
-  
-            # Установщик Windows с помощью NSIS для бота
-            echo "!include 'MUI2.nsh'" > bot_installer.nsi
-            echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
-            echo "InstallDir \$TEMP" >> bot_installer.nsi
-  
-            # Начало секции для бота
-            echo "Section" >> bot_installer.nsi
-  
-            # Устанавливаем путь для установки
-            echo "  SetOutPath \$INSTDIR" >> bot_installer.nsi
-            echo "  File dist\\bot.exe" >> bot_installer.nsi
-            echo "  File bot\\config.json" >> bot_installer.nsi  # Добавляем config.json
-  
-            # Регистрируем путь
-            echo "  WriteRegStr HKLM 'SOFTWARE\\Bot' 'Path' '\$INSTDIR\\bot.exe'" >> bot_installer.nsi
-            echo "  ExecWait '\$INSTDIR\\bot.exe --config \$INSTDIR\\config.json'" >> bot_installer.nsi  # Запуск с аргументом
-  
-            # Завершаем секцию
-            echo "SectionEnd" >> bot_installer.nsi
-  
-            # Сборка установщиков с помощью NSIS
-            & "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
-            & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
-  
-            # Проверим, существует ли файл, прежде чем перемещать
-            if (Test-Path "installer-agent-windows-v${{ env.VERSION }}.exe") {
-              Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
-            } else {
-              Write-Host "Error: installer-agent-windows-v${{ env.VERSION }}.exe not found!"
-              exit 1
-            }
-  
-            if (Test-Path "installer-bot-windows-v${{ env.VERSION }}.exe") {
-              Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
-            } else {
-              Write-Host "Error: installer-bot-windows-v${{ env.VERSION }}.exe not found!"
-              exit 1
-            }
-            
-            echo "Windows build and release complete."
-  
-
-
-      # Сборка для Linux
-      - name: Build and package for Linux
-        if: runner.os == 'Linux'  # Условие для Linux
-        run: |
-            echo "Starting the build process for Linux"
-        
-            pyinstaller --onefile --name=agent agent/__main__.py
-            pyinstaller --onefile --name=bot bot/__main__.py
-            
-            mkdir -p deb_pkg/opt/agent
-            mkdir -p deb_pkg/opt/bot
-        
-            if [ ! -f "dist/agent" ]; then
-              echo "Error: dist/agent not found!"
-              exit 1
-            else
-              echo "dist/agent exists"
-            fi
-        
-            echo "Checking if dist/bot exists"
-            if [ ! -f "dist/bot" ]; then
-              echo "Error: dist/bot not found!"
-              exit 1
-            else
-              echo "dist/bot exists"
-            fi
-        
-            cp dist/agent deb_pkg/opt/agent/    # Копируем бинарник агента
-            cp agent/config.json deb_pkg/opt/agent/  # Копируем конфигурационный файл агента
-        
-            echo "Copying files to deb_pkg/opt/bot/"
-            cp dist/bot deb_pkg/opt/bot/    # Копируем бинарник бота
-            cp bot/config.json deb_pkg/opt/bot/  # Копируем конфигурационный файл бота
-        
-            # Проверяем содержимое директории перед упаковкой
-            echo "Listing contents of deb_pkg/opt/agent"
-            ls -R deb_pkg/opt/agent/
-        
-            echo "Listing contents of deb_pkg/opt/bot"
-            ls -R deb_pkg/opt/bot/
-        
-            echo "Adding systemd services"
-            # Добавляем systemd сервисы для Linux
-            mkdir -p deb_pkg/etc/systemd/system
-            cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
-            cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
-        
-            echo "Listing contents of deb_pkg"
-            ls -R deb_pkg/
-        
-            # Проверяем, что все файлы на месте
-            echo "Building the .deb packages using fpm"
-            fpm -s dir -t deb -n agent -v ${{ env.VERSION }} deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-            fpm -s dir -t deb -n bot -v ${{ env.VERSION }} deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
-
-            ls .
-        
-            # Перемещаем .deb файлы в release
-            echo "Moving .deb files to release"
-            echo "mkdir -p ./release"
-            mkdir -p ./release
-            mv agent_${{ env.VERSION }}_amd64.deb ./release/
-            mv bot_${{ env.VERSION }}_amd64.deb ./release/
-        
-            echo "Linux build and release complete."
-
-
-  # Публикация релиза только при слиянии PR в main
-  publish_release:
-    runs-on: ubuntu-latest
-    needs: build  # Этот шаг будет выполнен только после успешных сборок для обеих платформ
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Bump version
-        run: |
-          echo "Bumping version..."
-          bump2version patch --allow-dirty
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pyproject.toml
-          git commit -m "Bump version [skip ci]"
-          git tag v$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          git push origin main --tags
-
-      - name: Publish Release on GitHub
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release/installer-agent-windows-v${{ env.VERSION }}.exe
-            release/installer-bot-windows-v${{ env.VERSION }}.exe
-            release/agent-${{ env.VERSION }}-1_amd64.deb
-            release/bot-${{ env.VERSION }}-1_amd64.deb
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\

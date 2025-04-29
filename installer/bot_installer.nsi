@@ -7,8 +7,8 @@ InstallDir $TEMP
 
 Section
   SetOutPath $INSTDIR
-  File dist\bot.exe
-  File bot\config.json
+  File "..\dist\bot.exe"
+  File "..\bot\config.json"
 
   WriteRegStr HKLM "SOFTWARE\Bot" "Path" "$INSTDIR\bot.exe"
   ExecWait "$INSTDIR\bot.exe -f $INSTDIR\config.json" 

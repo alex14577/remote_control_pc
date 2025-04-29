@@ -51,7 +51,7 @@ jobs:
         run: |
           VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "Version set to: $VERSION"
+          echo "Version set to: ${{ env.VERSION }}"
 
       # Сборка для Windows
       - name: Build and package for Windows

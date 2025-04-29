@@ -92,8 +92,8 @@ jobs:
           mkdir ./release
 
           # Перемещаем установщики в папку release
-          move /Y installer-agent-windows-v${{ env.VERSION }}.exe ./release/
-          move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
+          Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+          Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
           echo "Windows build and release complete."
 
 

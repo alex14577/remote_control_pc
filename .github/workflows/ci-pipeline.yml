@@ -71,7 +71,7 @@ jobs:
           echo "  WriteRegStr HKLM 'SOFTWARE\\Agent' 'Path' '\$INSTDIR\\agent.exe'" >> agent_installer.nsi
           echo "  ExecWait '\$INSTDIR\\agent.exe --config \$INSTDIR\\config.json'" >> agent_installer.nsi  # Запуск с аргументом
           echo "SectionEnd" >> agent_installer.nsi
-          
+
           # Установщик Windows с помощью NSIS для бота
           echo "!include 'MUI2.nsh'" > bot_installer.nsi
           echo "Outfile 'installer-bot-windows-v${{ env.VERSION }}.exe'" >> bot_installer.nsi
@@ -88,9 +88,22 @@ jobs:
           & "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
           & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
 
-          # Перемещаем установщики в папку release
-          Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
-          Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+
+          # Проверим, существует ли файл, прежде чем перемещать
+          if (Test-Path "installer-agent-windows-v${{ env.VERSION }}.exe") {
+            Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+          } else {
+            Write-Host "Error: installer-agent-windows-v${{ env.VERSION }}.exe not found!"
+            exit 1
+          }
+
+          if (Test-Path "installer-bot-windows-v${{ env.VERSION }}.exe") {
+            Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+          } else {
+            Write-Host "Error: installer-bot-windows-v${{ env.VERSION }}.exe not found!"
+            exit 1
+          }
+          
           echo "Windows build and release complete."
 
 

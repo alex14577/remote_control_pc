@@ -85,19 +85,12 @@ jobs:
         run: |
             echo "Starting the build process for Linux"
         
-            # Для Linux создаём бинарники без .exe
-            echo "Running pyinstaller for agent"
             pyinstaller --onefile --name=agent agent/__main__.py
-            echo "Running pyinstaller for bot"
             pyinstaller --onefile --name=bot bot/__main__.py
             
-            # Создаём директории, если их нет
-            echo "Creating directories for packaging"
             mkdir -p deb_pkg/opt/agent
             mkdir -p deb_pkg/opt/bot
         
-            # Проверяем, что файлы были созданы, и копируем их
-            echo "Checking if dist/agent exists"
             if [ ! -f "dist/agent" ]; then
               echo "Error: dist/agent not found!"
               exit 1
@@ -113,7 +106,6 @@ jobs:
               echo "dist/bot exists"
             fi
         
-            echo "Copying files to deb_pkg/opt/agent/"
             cp dist/agent deb_pkg/opt/agent/    # Копируем бинарник агента
             cp agent/config.json deb_pkg/opt/agent/  # Копируем конфигурационный файл агента
         
@@ -134,8 +126,8 @@ jobs:
             cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
             cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
         
-            echo "Listing contents of deb_pkg/etc/systemd/system"
-            ls -R deb_pkg/etc/systemd/system/
+            echo "Listing contents of deb_pkg"
+            ls -R deb_pkg/
         
             # Проверяем, что все файлы на месте
             echo "Building the .deb packages using fpm"

@@ -131,8 +131,8 @@ jobs:
         
             # Проверяем, что все файлы на месте
             echo "Building the .deb packages using fpm"
-            fpm -s dir -t deb -n agent -v ${{ env.VERSION }} --prefix /opt/agent deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-            fpm -s dir -t deb -n bot -v ${{ env.VERSION }} --prefix /opt/bot deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+            fpm -s dir -t deb -n agent -v ${{ env.VERSION }} deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+            fpm -s dir -t deb -n bot -v ${{ env.VERSION }} deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
         
             # Перемещаем .deb файлы в release
             echo "Moving .deb files to release"

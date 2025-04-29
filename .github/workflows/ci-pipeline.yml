@@ -85,13 +85,17 @@ jobs:
           echo "SectionEnd" >> bot_installer.nsi
           
           # Сборка установщиков с помощью NSIS
-          C:\\Program Files (x86)\\NSIS\\makensis.exe agent_installer.nsi
-          C:\\Program Files (x86)\\NSIS\\makensis.exe bot_installer.nsi
+          "C:\\Program Files (x86)\\NSIS\\makensis.exe" agent_installer.nsi
+          "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
+
+          # Создаём папку release, если её нет
+          mkdir ./release
 
           # Перемещаем установщики в папку release
           move /Y installer-agent-windows-v${{ env.VERSION }}.exe ./release/
           move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
           echo "Windows build and release complete."
+
 
       # Сборка для Linux
       - name: Build and package for Linux

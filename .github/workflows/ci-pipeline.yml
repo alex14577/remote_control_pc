@@ -89,9 +89,10 @@ jobs:
           & "C:\\Program Files (x86)\\NSIS\\makensis.exe" bot_installer.nsi
 
           # Перемещаем установщики в папку release
-          move /Y installer-agent-windows-v${{ env.VERSION }}.exe ./release/
-          move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
+          Move-Item -Path "installer-agent-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
+          Move-Item -Path "installer-bot-windows-v${{ env.VERSION }}.exe" -Destination "./release/"
           echo "Windows build and release complete."
+
 
       # Сборка для Linux
       - name: Build and package for Linux

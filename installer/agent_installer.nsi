@@ -1,5 +1,7 @@
 !include "MUI2.nsh"
 
+!define VERSION "${VERSION}"
+
 Outfile "installer-agent-windows-v${VERSION}.exe"
 InstallDir $TEMP
 

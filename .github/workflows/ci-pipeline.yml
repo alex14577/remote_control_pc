@@ -153,8 +153,8 @@ jobs:
         
             # Перемещаем .deb файлы в release
             echo "Moving .deb files to release"
-            mv agent-${{ env.VERSION }}-1_amd64.deb ./release/
-            mv bot-${{ env.VERSION }}-1_amd64.deb ./release/
+            mv agent_${{ env.VERSION }}_amd64.deb ./release/
+            mv bot_${{ env.VERSION }}_amd64.deb ./release/
         
             echo "Linux build and release complete."
         

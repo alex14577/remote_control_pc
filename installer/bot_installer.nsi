@@ -1,6 +1,7 @@
 !include "MUI2.nsh"
 
 !define VERSION "${VERSION}"
+!echo "VERSION=${VERSION}"
 
 Outfile "installer-bot-windows-v${VERSION}.exe"
 InstallDir $TEMP

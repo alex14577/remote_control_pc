@@ -80,34 +80,75 @@ jobs:
           move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
           echo "Windows build and release complete."
 
-      # Сборка для Linux
       - name: Build and package for Linux
         if: runner.os == 'Linux'  # Условие для Linux
-        run: |
-          pyinstaller --onefile --name=agent agent/__main__.py
-          pyinstaller --onefile --name=bot bot/__main__.py
-          
-          # Используем fpm для упаковки в .deb
-          mkdir -p deb_pkg/opt/agent
-          cp dist/agent deb_pkg/opt/agent/
-          cp agent/config.json deb_pkg/opt/agent/  # Добавляем config.json в пакет
-
-          mkdir -p deb_pkg/opt/bot
-          cp dist/bot deb_pkg/opt/bot/
-          cp bot/config.json deb_pkg/opt/bot/  # Добавляем config.json в пакет
-
-          # Добавляем systemd сервисы для Linux
-          mkdir -p deb_pkg/etc/systemd/system
-          cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
-          cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
-
-          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} --prefix /opt/agent deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} --prefix /opt/bot deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
-
-          # Перемещаем deb файлы в release
-          mv agent-${{ env.VERSION }}-1_amd64.deb ./release/
-          mv bot-${{ env.VERSION }}-1_amd64.deb ./release/
-          echo "Linux build and release complete."
+          run: |
+            echo "Starting the build process for Linux"
+        
+            # Для Linux создаём бинарники без .exe
+            echo "Running pyinstaller for agent"
+            pyinstaller --onefile --name=agent agent/__main__.py
+            echo "Running pyinstaller for bot"
+            pyinstaller --onefile --name=bot bot/__main__.py
+            
+            # Создаём директории, если их нет
+            echo "Creating directories for packaging"
+            mkdir -p deb_pkg/opt/agent
+            mkdir -p deb_pkg/opt/bot
+        
+            # Проверяем, что файлы были созданы, и копируем их
+            echo "Checking if dist/agent exists"
+            if [ ! -f "dist/agent" ]; then
+              echo "Error: dist/agent not found!"
+              exit 1
+            else
+              echo "dist/agent exists"
+            fi
+        
+            echo "Checking if dist/bot exists"
+            if [ ! -f "dist/bot" ]; then
+              echo "Error: dist/bot not found!"
+              exit 1
+            else
+              echo "dist/bot exists"
+            fi
+        
+            echo "Copying files to deb_pkg/opt/agent/"
+            cp dist/agent deb_pkg/opt/agent/    # Копируем бинарник агента
+            cp agent/config.json deb_pkg/opt/agent/  # Копируем конфигурационный файл агента
+        
+            echo "Copying files to deb_pkg/opt/bot/"
+            cp dist/bot deb_pkg/opt/bot/    # Копируем бинарник бота
+            cp bot/config.json deb_pkg/opt/bot/  # Копируем конфигурационный файл бота
+        
+            # Проверяем содержимое директории перед упаковкой
+            echo "Listing contents of deb_pkg/opt/agent"
+            ls -R deb_pkg/opt/agent/
+        
+            echo "Listing contents of deb_pkg/opt/bot"
+            ls -R deb_pkg/opt/bot/
+        
+            echo "Adding systemd services"
+            # Добавляем systemd сервисы для Linux
+            mkdir -p deb_pkg/etc/systemd/system
+            cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
+            cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
+        
+            echo "Listing contents of deb_pkg/etc/systemd/system"
+            ls -R deb_pkg/etc/systemd/system/
+        
+            # Проверяем, что все файлы на месте
+            echo "Building the .deb packages using fpm"
+            fpm -s dir -t deb -n agent -v ${{ env.VERSION }} --prefix /opt/agent deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+            fpm -s dir -t deb -n bot -v ${{ env.VERSION }} --prefix /opt/bot deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+        
+            # Перемещаем .deb файлы в release
+            echo "Moving .deb files to release"
+            mv agent-${{ env.VERSION }}-1_amd64.deb ./release/
+            mv bot-${{ env.VERSION }}-1_amd64.deb ./release/
+        
+            echo "Linux build and release complete."
+        
 
   # Публикация релиза только при слиянии PR в main
   publish_release:

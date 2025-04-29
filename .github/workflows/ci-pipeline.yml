@@ -11,7 +11,7 @@ on:
 jobs:
   # Сборка для Windows и Linux
   build:
-    runs-on: ${{ matrix.os }}  # Параллельно для Windows и Linux
+    runs-on: ${{ matrix.os }}  # Параллельная сборка для Windows и Linux
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]  # Параллельная сборка для Windows и Linux
@@ -31,19 +31,11 @@ jobs:
           pip install pyinstaller
           pip install bump2version
           pip install -r requirements.txt
-        
-      - name: Install fpm
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install ruby-dev  # Устанавливаем зависимости для fpm
-          sudo gem install --no-document fpm  # Устанавливаем fpm
-          echo "fpm installed"
 
+      # Сборка для Windows
       - name: Build and package for Windows
         if: runner.os == 'Windows'  # Условие для Windows
         run: |
-          # Для Windows создаём .exe файлы
           pyinstaller --onefile --name=agent.exe agent/__main__.py
           pyinstaller --onefile --name=bot.exe bot/__main__.py
           
@@ -80,10 +72,10 @@ jobs:
           move /Y installer-bot-windows-v${{ env.VERSION }}.exe ./release/
           echo "Windows build and release complete."
 
+      # Сборка для Linux
       - name: Build and package for Linux
         if: runner.os == 'Linux'  # Условие для Linux
         run: |
-          # Для Linux создаём бинарники без .exe
           pyinstaller --onefile --name=agent agent/__main__.py
           pyinstaller --onefile --name=bot bot/__main__.py
           

@@ -104,22 +104,23 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
-
+      
           cp dist/agent deb_pkg/opt/agent/
           cp agent/config.json deb_pkg/opt/agent/
           cp dist/bot deb_pkg/opt/bot/
           cp bot/config.json deb_pkg/opt/bot/
-
+      
           mkdir -p deb_pkg/etc/systemd/system
           cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
           cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
-
-          .venv/bin/fpm -s dir -t deb -n agent -v ${{ env.VERSION }} deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-          .venv/bin/fpm -s dir -t deb -n bot -v ${{ env.VERSION }} deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
-
+      
+          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+      
           mkdir -p release
           mv agent_${{ env.VERSION }}_amd64.deb release/
           mv bot_${{ env.VERSION }}_amd64.deb release/
+        
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -1,6 +1,8 @@
 !include "MUI2.nsh"
 !define VERSION "$%VERSION%"
 
+RequestExecutionLevel admin
+
 Outfile "installer-agent-windows-v${VERSION}.exe"
 InstallDir "$PROGRAMFILES\Agent"
 InstallDirRegKey HKLM "Software\Agent" "Install_Dir"

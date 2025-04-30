@@ -32,6 +32,12 @@ Section "Install Agent"
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "❌ Не удалось установить и запустить службу"
   ${EndIf}
+  
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe" start'
+  Pop $0
+  ${If} $0 != 0
+      MessageBox MB_ICONSTOP "❌ Не удалось запустить службу"
+  ${EndIf}
 SectionEnd
 
 

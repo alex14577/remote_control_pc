@@ -56,3 +56,4 @@ jobs:
           git commit -m "Bump version [skip ci]"
           git tag v$(grep -Po '(?<=version = \")[^\"]*' pyproject.toml)
           git push origin main --tags
+ 

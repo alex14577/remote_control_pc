@@ -16,7 +16,7 @@ Section "Install Agent"
   SetOutPath "$INSTDIR"
   File "..\dist\agent.exe"
   File "..\agent\config.json"
-  File "..\dist\agent-service.exe"
+  File "..\dist\agent_service.exe"
 
   ; Регистрация для удаления
   WriteRegStr HKLM "Software\Agent" "Install_Dir" "$INSTDIR"
@@ -28,19 +28,19 @@ Section "Install Agent"
 
   WriteUninstaller "${UNINSTALL_EXE}"
 
-  nsExec::Exec '"$INSTDIR\agent-service.exe"'
+  nsExec::Exec '"$INSTDIR\agent_service.exe"'
 SectionEnd
 
 
 ; Секция удаления
 Section "Uninstall"
   ; Остановить и удалить службу через обёртку
-  nsExec::Exec '"$INSTDIR\agent-service.exe" remove'
+  nsExec::Exec '"$INSTDIR\agent_service.exe" remove'
   Sleep 2000
 
   Delete "$INSTDIR\agent.exe"
   Delete "$INSTDIR\config.json"
-  Delete "$INSTDIR\agent-service.exe"
+  Delete "$INSTDIR\agent_service.exe"
   Delete "$INSTDIR\agent.log"
   Delete "${UNINSTALL_EXE}"
   RMDir "$INSTDIR"

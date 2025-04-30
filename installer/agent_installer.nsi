@@ -27,7 +27,7 @@ Section "Install Agent"
 
   WriteUninstaller "${UNINSTALL_EXE}"
 
-  nsExec::ExecToStack '"$INSTDIR\agent_service.exe"'
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe" install'
   Pop $0
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "❌ Не удалось установить и запустить службу"

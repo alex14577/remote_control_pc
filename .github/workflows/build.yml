@@ -172,6 +172,11 @@ jobs:
           fi
           git push origin "v${{ env.VERSION }}" --force  # Push the tag to GitHub, force update if needed
 
+      - name: List files in release folder
+        run: |
+          echo "Listing files in release folder:"
+          ls -al release/
+
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:

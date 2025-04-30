@@ -45,5 +45,8 @@ jobs:
         with:
           files: |
             release/*
+            release/installer-bot-windows-v*.exe
+            release/agent-*_amd64.deb
+            release/bot-*_amd64.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

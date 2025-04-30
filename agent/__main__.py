@@ -8,6 +8,17 @@ import json
 
 from agent.agent import run_agent
 
+import logging
+
+logging.basicConfig(
+    filename="agent.log",
+    filemode="a",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+print = logging.info
+
 
 def main():
     parser = argparse.ArgumentParser(description="PC Agent")

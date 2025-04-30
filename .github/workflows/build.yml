@@ -157,14 +157,20 @@ jobs:
         with:
           name: build-artifacts-windows-${{ env.VERSION }}
 
-      - name: Bump version and push tag
-        id: bump
-        uses: anothrNick/github-tag-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag_prefix: "v"  # Tag will have a prefix "v", i.e., v0.1.0-34
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use GITHUB_TOKEN or PAT for pushing tags
+      - name: Check if tag exists and create or update tag
+        run: |
+          # Create the tag if it doesn't exist, or force update if it does
+          git fetch --tags
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1
+          then
+            echo "Tag v${{ env.VERSION }} already exists. Updating tag."
+            git tag -d "v${{ env.VERSION }}"
+            git tag "v${{ env.VERSION }}"
+          else
+            echo "Creating new tag v${{ env.VERSION }}"
+            git tag "v${{ env.VERSION }}"
+          fi
+          git push origin "v${{ env.VERSION }}" --force  # Push the tag to GitHub, force update if needed
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
@@ -174,6 +180,6 @@ jobs:
             release/installer-bot-windows-v${{ env.VERSION }}.exe
             release/agent-${{ env.VERSION }}-amd64.deb
             release/bot-${{ env.VERSION }}-amd64.deb
-          tag_name: ${{ steps.bump.outputs.new_tag }}  # Use the new tag created by the bump action
+          tag_name: v${{ env.VERSION }}  # Use the tag created/updated in the previous step
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

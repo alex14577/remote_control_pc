@@ -1,9 +1,7 @@
 {
-    "server_url": "ws://localhost:33444",
+    "server_url": "",
 
-    "telegram_token": "7257127667:AAEd86Ycyd9BjvUKc4YVrfwlGnTpI07zbfo",
-    "telegram_chat_id": 572200030,
-    "agent_mac": "00:11:22:33:44:55",
-    "broadcast_ip": "192.168.1.255"
+    "telegram_token": "",
+    "telegram_chat_id": 1234
   }
   

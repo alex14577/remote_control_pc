@@ -175,7 +175,7 @@ jobs:
       - name: List files in release folder
         run: |
           echo "Listing files in release folder:"
-          ls -al release/
+          ls -al ./
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2

@@ -26,7 +26,6 @@ Section "Install Agent"
 
   WriteUninstaller "${UNINSTALL_EXE}"
 
-  ; ✅ Только этот запуск — устанавливает службу и запускает
   nsExec::Exec '"$INSTDIR\agent-service.exe"'
 SectionEnd
 

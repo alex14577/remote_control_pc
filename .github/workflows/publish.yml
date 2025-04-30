@@ -1,18 +1,33 @@
 name: Publish Release
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Build Linux and Windows"]
     types:
-      - closed
+      - completed  # Triggered when the "Build Linux and Windows" workflow is completed.
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true  # Проверяем, что PR был слит
+    needs: [build-linux, build-windows]  # Wait for the build jobs to finish
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Get Pull Request Info
+        id: pr_info
+        run: |
+          PR_NUMBER=$(curl -s https://api.github.com/repos/${{ github.repository }}/pulls?state=closed | jq -r '.[0].number')
+          PR_MERGED=$(curl -s https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER} | jq -r '.merged')
+          echo "Pull request number: $PR_NUMBER"
+          echo "Merged status: $PR_MERGED"
+          echo "MERGED=$PR_MERGED" >> $GITHUB_ENV
+
+      - name: Check if PR was merged
+        if: env.MERGED == 'true'  # Only continue if the PR was merged
+        run: |
+          echo "The pull request was merged. Continuing with the publish steps."
 
       - name: Set version environment variable
         run: |
@@ -23,12 +38,12 @@ jobs:
       - name: Download Linux artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-artifacts-linux-${{ env.VERSION }}
+          name: build-artifacts-linux-${{ github.sha }}
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v2
         with:
-          name: build-artifacts-windows-${{ env.VERSION }}
+          name: build-artifacts-windows-${{ github.sha }}
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2

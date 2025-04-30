@@ -51,8 +51,8 @@ jobs:
           .venv/bin/pyinstaller --onefile --name=agent agent/__main__.py
           .venv/bin/pyinstaller --onefile --name=bot bot/__main__.py
 
-          - name: Package Linux
-          run: |
+      - name: Package Linux
+        run: |
             rm -rf deb_pkg
             mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
             mkdir -p deb_pkg/etc/systemd/system

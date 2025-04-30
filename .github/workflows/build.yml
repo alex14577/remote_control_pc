@@ -75,7 +75,7 @@ jobs:
             fpm -s dir -t deb -n bot -v ${{ env.VERSION }} \
               --after-install scripts/after-install-bot.sh \
               -C deb_pkg \
-              opt/bot/=/opt/bot/
+              opt/bot/=/opt/bot/ \
               etc/systemd/system/bot.service=/etc/systemd/system/bot.service
               
             mkdir -p release

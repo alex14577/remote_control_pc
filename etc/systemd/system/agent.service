@@ -1,9 +1,11 @@
 [Unit]
 Description=Agent Service
+After=network.target
 
 [Service]
-ExecStart=/opt/agent/agent --config /opt/agent/config.json
-Restart=always
+ExecStart=/opt/agent/agent -f /opt/agent/config.jsom
+Restart=on-failure
+User=root
 
 [Install]
 WantedBy=multi-user.target

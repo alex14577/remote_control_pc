@@ -8,3 +8,8 @@ requests
 pyinstaller
 pylnk3
 logging
+
+pywin32
+win32serviceutil
+win32service
+win32event

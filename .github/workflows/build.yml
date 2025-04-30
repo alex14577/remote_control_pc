@@ -66,10 +66,12 @@ jobs:
             deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
 
           fpm -s dir -t deb -n bot -v "$VERSION" \
-            --after-install scripts/after-install-bot.sh \
-            -C deb_pkg \
-            opt/bot/=/opt/bot/ \
-            etc/systemd/system/bot.service=/etc/systemd/system/bot.service
+              --after-install scripts/after-install-bot.sh \
+              -C deb_pkg \
+              opt/bot/bot=/opt/bot/bot \
+              opt/bot/config.json=/opt/bot/config.json \
+              etc/systemd/system/bot.service=/etc/systemd/system/bot.service
+
 
 
           mkdir -p release

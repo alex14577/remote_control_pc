@@ -183,8 +183,8 @@ jobs:
           files: |
             installer-agent-windows-v${{ env.VERSION }}.exe
             installer-bot-windows-v${{ env.VERSION }}.exe
-            agent_${{ env.VERSION }}-amd64.deb
-            bot_${{ env.VERSION }}-amd64.deb
+            agent_${{ env.VERSION }}_amd64.deb
+            bot_${{ env.VERSION }}_amd64.deb
           tag_name: v${{ env.VERSION }}  # Use the tag created/updated in the previous step
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -53,6 +53,7 @@ jobs:
 
       - name: Package Linux
         run: |
+          ls -la
           rm -rf deb_pkg
           mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
           mkdir -p deb_pkg/etc/systemd/system

@@ -53,15 +53,16 @@ jobs:
 
       - name: Package Linux
         run: |
+          rm -rf deb_pkg
           mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
+          mkdir -p deb_pkg/etc/systemd/system
 
-          cp dist/agent deb_pkg/opt/agent/
+          cp -r dist/agent/* deb_pkg/opt/agent/
           cp agent/config.json deb_pkg/opt/agent/config.json
 
-          cp dist/bot deb_pkg/opt/bot/
+          cp -r dist/bot/* deb_pkg/opt/bot/
           cp bot/config.json deb_pkg/opt/bot/config.json
 
-          mkdir -p deb_pkg/etc/systemd/system
           cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
           cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
 
@@ -77,12 +78,9 @@ jobs:
             opt/bot/=/opt/bot/ \
             etc/systemd/system/bot.service=/etc/systemd/system/bot.service
 
-
-
-
-          mkdir -p release
-          mv agent_${{ env.VERSION }}_amd64.deb release/
-          mv bot_${{ env.VERSION }}_amd64.deb release/
+            mkdir -p release
+            mv agent_${{ env.VERSION }}_amd64.deb release/
+            mv bot_${{ env.VERSION }}_amd64.deb release/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

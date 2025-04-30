@@ -54,23 +54,29 @@ jobs:
       - name: Package Linux
         run: |
           mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
-          cp dist/agent deb_pkg/opt/agent/
-          cp agent/config.json deb_pkg/opt/agent/
-          cp dist/bot deb_pkg/opt/bot/
-          cp bot/config.json deb_pkg/opt/bot/
+
+          cp dist/agent deb_pkg/opt/agent/agent
+          cp agent/config.json deb_pkg/opt/agent/config.json
+
+          cp dist/bot deb_pkg/opt/bot/bot
+          cp bot/config.json deb_pkg/opt/bot/config.json
+
           mkdir -p deb_pkg/etc/systemd/system
           cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
           cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
+          
           fpm -s dir -t deb -n agent -v ${{ env.VERSION }} \
             --after-install scripts/after-install-agent.sh \
-            deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+            -C deb_pkg \
+            opt/agent/=/opt/agent/ \
+            etc/systemd/system/agent.service=/etc/systemd/system/agent.service
 
-          fpm -s dir -t deb -n bot -v "$VERSION" \
-              --after-install scripts/after-install-bot.sh \
-              -C deb_pkg \
-              opt/bot/bot=/opt/bot/bot \
-              opt/bot/config.json=/opt/bot/config.json \
-              etc/systemd/system/bot.service=/etc/systemd/system/bot.service
+          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} \
+            --after-install scripts/after-install-bot.sh \
+            -C deb_pkg \
+            opt/bot/=/opt/bot/ \
+            etc/systemd/system/bot.service=/etc/systemd/system/bot.service
+
 
 
 

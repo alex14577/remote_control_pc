@@ -128,7 +128,7 @@ jobs:
         run: |
           .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
           .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
-          .\.venv\Scripts\pyinstaller.exe --onefile --name=agent_service agent\agent_service.py
+          .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
 
 
       - name: Package Windows

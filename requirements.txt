@@ -7,3 +7,4 @@ platformdirs
 requests
 pyinstaller
 pylnk3
+logging

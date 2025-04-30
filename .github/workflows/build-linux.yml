@@ -70,5 +70,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-linux
+          name: build-artifacts-linux-${{ env.VERSION }}
           path: release/*

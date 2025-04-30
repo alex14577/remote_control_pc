@@ -43,7 +43,7 @@ jobs:
       - name: Set version
         run: |
           base_version=$(grep -Po '(?<=version = \")[^\"]*' pyproject.toml)
-          VERSION="${base_version}.${GITHUB_RUN_NUMBER}"
+          VERSION="${base_version}-${GITHUB_RUN_NUMBER}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build executables

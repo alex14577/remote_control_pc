@@ -17,7 +17,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-print = logging.info  # Заменить print на лог
+print = logging.info
 
 
 def main():

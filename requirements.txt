@@ -5,4 +5,6 @@ nest_asyncio
 pyyaml
 platformdirs
 requests
-pyinstaller 
+pyinstaller
+pylnk3
+logging

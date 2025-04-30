@@ -61,8 +61,14 @@ jobs:
           mkdir -p deb_pkg/etc/systemd/system
           cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
           cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
-          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} \
+            --after-install scripts/after-install-agent.sh \
+            deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
+
+          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} \
+            --after-install scripts/after-install-bot.sh \
+            deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
+
           mkdir -p release
           mv agent_${{ env.VERSION }}_amd64.deb release/
           mv bot_${{ env.VERSION }}_amd64.deb release/

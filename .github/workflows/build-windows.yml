@@ -40,7 +40,7 @@ jobs:
       - name: Set version
         run: |
           $base_version = (Select-String -Path pyproject.toml -Pattern '(?<=version = \")[^\"]*').Matches.Groups[0].Value
-          $full_version = "$base_version.${env:GITHUB_RUN_NUMBER}"
+          $full_version = "$base_version-${env:GITHUB_RUN_NUMBER}"
           echo "VERSION=$full_version" >> $Env:GITHUB_ENV
 
       - name: Build executables

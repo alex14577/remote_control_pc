@@ -16,9 +16,9 @@ jobs:
 
       - name: Set version environment variable
         run: |
-          VERSION=$(grep -Po '(?<=version = ")[^"]*' pyproject.toml)
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "Version set to: ${VERSION}"
+          base_version=$(grep -Po '(?<=version = \")[^\"]*' pyproject.toml)
+          VERSION="${base_version}-${GITHUB_RUN_NUMBER}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4

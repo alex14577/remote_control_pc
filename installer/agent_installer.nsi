@@ -27,7 +27,7 @@ Section "Install Agent"
   WriteUninstaller "${UNINSTALL_EXE}"
 
   ; Создаём и запускаем службу
-  nsExec::Exec 'sc.exe create AgentService binPath= "\"$INSTDIR\agent.exe\"" start= auto DisplayName= "Agent Service"'
+  nsExec::Exec 'sc.exe create AgentService binPath= "\"$INSTDIR\agent.exe\" -f \"$INSTDIR\config.json\"" start= auto DisplayName= "Agent Service"'
   nsExec::Exec 'sc.exe failure "AgentService" reset= 60 actions= restart/5000'
   nsExec::Exec 'sc.exe start AgentService'
 SectionEnd

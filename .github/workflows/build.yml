@@ -143,6 +143,9 @@ jobs:
         run: |
           echo "GitHub Context Variables: ${{ toJson(github) }}"
           echo "GitHub Context Variables: ${{ toJson(github.event) }}"
+          echo "Event Name: $GITHUB_EVENT_NAME"
+          echo "Event Action: $GITHUB_EVENT_ACTION"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
 
       - name: Checkout code
         uses: actions/checkout@v4

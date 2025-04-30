@@ -18,7 +18,6 @@ Section "Install Agent"
   File "..\agent\config.json"
   File "..\dist\agent_service.exe"
 
-  ; Регистрация для удаления
   WriteRegStr HKLM "Software\Agent" "Install_Dir" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "DisplayName" "Agent Service"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "UninstallString" '"$INSTDIR\uninstall.exe"'
@@ -28,8 +27,13 @@ Section "Install Agent"
 
   WriteUninstaller "${UNINSTALL_EXE}"
 
-  nsExec::Exec '"$INSTDIR\agent_service.exe"'
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe"'
+  Pop $0
+  ${If} $0 != 0
+    MessageBox MB_ICONSTOP "❌ Не удалось установить и запустить службу"
+  ${EndIf}
 SectionEnd
+
 
 
 ; Секция удаления

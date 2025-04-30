@@ -181,10 +181,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/installer-agent-windows-v${{ env.VERSION }}.exe
-            release/installer-bot-windows-v${{ env.VERSION }}.exe
-            release/agent-${{ env.VERSION }}-amd64.deb
-            release/bot-${{ env.VERSION }}-amd64.deb
+            installer-agent-windows-v${{ env.VERSION }}.exe
+            installer-bot-windows-v${{ env.VERSION }}.exe
+            agent-${{ env.VERSION }}-amd64.deb
+            bot-${{ env.VERSION }}-amd64.deb
           tag_name: v${{ env.VERSION }}  # Use the tag created/updated in the previous step
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

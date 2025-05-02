@@ -120,7 +120,7 @@ if __name__ == "__main__":
         try:
             win32serviceutil.RemoveService(name)
             print("🗑️ Service removed")
-        except Exception as e:
+        except Exception as e:  
             print(f"❌ Remove failed: {e}")
 
     else:

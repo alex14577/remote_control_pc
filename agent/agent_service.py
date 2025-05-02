@@ -103,6 +103,10 @@ def service_exists(name):
 
 
 if __name__ == "__main__":
+
+    application_path = os.path.dirname(sys.executable)
+    os.chdir(application_path)
+
     name = AgentService._svc_name_
 
     if len(sys.argv) == 1:

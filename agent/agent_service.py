@@ -134,5 +134,19 @@ if __name__ == "__main__":
             print("Service removed")
         except Exception as e:
             print(f"Remove failed: {e}")
+    elif sys.argv[1].lower() == "install":
+        try:
+            win32serviceutil.InstallService(
+                pythonClassString="__main__.AgentService",  # ВАЖНО: __main__, а не имя файла
+                serviceName=name,
+                displayName=AgentService._svc_display_name_,
+                description=AgentService._svc_description_,
+                exeName=sys.executable,
+                startType=win32service.SERVICE_AUTO_START
+            )
+            print("Service installed")
+        except Exception as e:
+            print(f"Install failed: {e}")
+
     else:
         win32serviceutil.HandleCommandLine(AgentService)

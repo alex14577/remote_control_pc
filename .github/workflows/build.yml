@@ -53,25 +53,34 @@ jobs:
 
       - name: Package Linux
         run: |
-          mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
-          cp dist/agent deb_pkg/opt/agent/
-          cp agent/config.json deb_pkg/opt/agent/
-          cp dist/bot deb_pkg/opt/bot/
-          cp bot/config.json deb_pkg/opt/bot/
-          mkdir -p deb_pkg/etc/systemd/system
-          cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
-          cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
-          fpm -s dir -t deb -n agent -v ${{ env.VERSION }} \
-            --after-install scripts/after-install-agent.sh \
-            deb_pkg/opt/agent/ deb_pkg/etc/systemd/system/
-
-          fpm -s dir -t deb -n bot -v ${{ env.VERSION }} \
-            --after-install scripts/after-install-bot.sh \
-            deb_pkg/opt/bot/ deb_pkg/etc/systemd/system/
-
-          mkdir -p release
-          mv agent_${{ env.VERSION }}_amd64.deb release/
-          mv bot_${{ env.VERSION }}_amd64.deb release/
+            rm -rf deb_pkg
+            mkdir -p deb_pkg/opt/agent deb_pkg/opt/bot
+            mkdir -p deb_pkg/etc/systemd/system
+        
+            cp dist/agent deb_pkg/opt/agent/agent
+            cp agent/config.json deb_pkg/opt/agent/config.json
+        
+            cp dist/bot deb_pkg/opt/bot/bot
+            cp bot/config.json deb_pkg/opt/bot/config.json
+        
+            cp ./etc/systemd/system/agent.service deb_pkg/etc/systemd/system/
+            cp ./etc/systemd/system/bot.service deb_pkg/etc/systemd/system/
+        
+            fpm -s dir -t deb -n agent -v ${{ env.VERSION }} \
+              --after-install scripts/after-install-agent.sh \
+              -C deb_pkg \
+              opt/agent/=/opt/agent/ \
+              etc/systemd/system/agent.service=/etc/systemd/system/agent.service
+        
+            fpm -s dir -t deb -n bot -v ${{ env.VERSION }} \
+              --after-install scripts/after-install-bot.sh \
+              -C deb_pkg \
+              opt/bot/=/opt/bot/ \
+              etc/systemd/system/bot.service=/etc/systemd/system/bot.service
+              
+            mkdir -p release
+            mv agent_${{ env.VERSION }}_amd64.deb release/
+            mv bot_${{ env.VERSION }}_amd64.deb release/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -119,6 +128,8 @@ jobs:
         run: |
           .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
           .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
+          .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
+
 
       - name: Package Windows
         run: |

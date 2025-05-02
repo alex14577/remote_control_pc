@@ -23,7 +23,7 @@ class AgentService(win32serviceutil.ServiceFramework):
 
     def SvcStop(self):
         self._log("SvcStop called")
-        servicemanager.LogInfoMsg("AgentService: Stopping service.")
+        servicemanager.LogInfoMsg("AgentService: stopping...")
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         if self.process and self.process.poll() is None:
             try:
@@ -36,38 +36,29 @@ class AgentService(win32serviceutil.ServiceFramework):
 
     def SvcDoRun(self):
         self._log("SvcDoRun called")
-        servicemanager.LogInfoMsg("AgentService: Starting service.")
-        print(">>> SvcDoRun called")
-
-        thread = threading.Thread(target=self.run_agent, daemon=True)
-        thread.start()
-        self._log("Thread for run_agent started")
-
+        servicemanager.LogInfoMsg("AgentService: starting...")
+        threading.Thread(target=self.run_agent, daemon=True).start()
         win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
         self._log("Service stopping...")
-        servicemanager.LogInfoMsg("AgentService: Service stopping...")
+        servicemanager.LogInfoMsg("AgentService: stopped.")
 
     def run_agent(self):
         try:
             application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
             os.chdir(application_path)
             self._log(f"Working directory set to: {application_path}")
-            servicemanager.LogInfoMsg(f"AgentService: Working directory set to {application_path}")
+            servicemanager.LogInfoMsg(f"AgentService: working dir set to {application_path}")
         except Exception as e:
-            msg = f"run_agent: Error setting working directory: {e}"
-            print(msg)
-            self._log(msg)
-            servicemanager.LogInfoMsg("AgentService: Failed to set working directory.")
-            sys.exit(1)
+            self._log(f"ERROR: Failed to set working dir: {e}")
+            servicemanager.LogInfoMsg("AgentService: failed to set working dir.")
+            return
 
         self._log("Entered run_agent()")
-        print(">>> run_agent() entered")
 
         try:
-            base = application_path
-            agent = os.path.join(base, "agent.exe")
-            config = os.path.join(base, "config.json")
-            log_file_path = os.path.join(base, "agent.log")
+            agent = os.path.join(application_path, "agent.exe")
+            config = os.path.join(application_path, "config.json")
+            log_file_path = os.path.join(application_path, "agent.log")
 
             self._log(f"Agent path: {agent}")
             self._log(f"Config path: {config}")
@@ -91,14 +82,13 @@ class AgentService(win32serviceutil.ServiceFramework):
                 servicemanager.LogInfoMsg("AgentService: agent.exe started.")
                 self.process.wait()
                 self._log(f"agent.exe exited with code {self.process.returncode}")
-                servicemanager.LogInfoMsg(f"AgentService: agent.exe exited with code {self.process.returncode}")
-
-            win32event.SetEvent(self.stop_event)
+                servicemanager.LogInfoMsg(f"AgentService: agent.exe exited ({self.process.returncode})")
 
         except Exception as e:
             self._log(f"ERROR: Failed to start agent.exe: {e}")
-            servicemanager.LogInfoMsg(f"AgentService: Exception occurred: {e}")
-            win32event.SetEvent(self.stop_event)
+            servicemanager.LogInfoMsg(f"AgentService: startup failed: {e}")
+
+        win32event.SetEvent(self.stop_event)
 
     def _log(self, msg):
         try:
@@ -122,32 +112,18 @@ def service_exists(name):
 
 
 if __name__ == "__main__":
-    application_path = os.path.dirname(sys.executable)
-    os.chdir(application_path)
-
     name = AgentService._svc_name_
 
+    # Установим рабочую директорию на папку exe, чтобы пути работали
+    application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+    os.chdir(application_path)
+
     if len(sys.argv) == 1:
-        if not service_exists(name):
-            try:
-                win32serviceutil.InstallService(
-                    pythonClassString="agent_service.AgentService",
-                    serviceName=name,
-                    displayName=AgentService._svc_display_name_,
-                    description=AgentService._svc_description_,
-                    exeName=sys.executable,
-                    startType=win32service.SERVICE_AUTO_START
-                )
-                print("✅ Service installed")
-            except Exception as e:
-                print(f"❌ Install failed: {e}")
-
-        try:
-            win32serviceutil.StartService(name)
-            print("▶️ Service started")
-        except Exception as e:
-            print(f"❌ Start failed: {e}")
-
+        # ✔ Правильный запуск службы через StartServiceCtrlDispatcher
+        import servicemanager
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(AgentService)
+        servicemanager.StartServiceCtrlDispatcher()
     elif sys.argv[1].lower() == "remove":
         try:
             win32serviceutil.StopService(name)
@@ -155,9 +131,8 @@ if __name__ == "__main__":
             pass
         try:
             win32serviceutil.RemoveService(name)
-            print("🗑️ Service removed")
+            print("Service removed")
         except Exception as e:
-            print(f"❌ Remove failed: {e}")
-
+            print(f"Remove failed: {e}")
     else:
         win32serviceutil.HandleCommandLine(AgentService)

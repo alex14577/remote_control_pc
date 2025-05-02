@@ -11,12 +11,12 @@ InstallDirRegKey HKLM "Software\Agent" "Install_Dir"
 
 Section "Install Agent"
   SetOutPath "$INSTDIR"
-  DetailPrint "--- Установка начата ---"
+  DetailPrint "[INFO] Установка начата"
 
   File "..\dist\agent.exe"
   File "..\agent\config.json"
   File "..\dist\agent_service.exe"
-  DetailPrint "✔️ Файлы скопированы"
+  DetailPrint "[OK] Файлы скопированы"
 
   WriteRegStr HKLM "Software\Agent" "Install_Dir" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "DisplayName" "Agent Service"
@@ -24,42 +24,42 @@ Section "Install Agent"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "DisplayVersion" "${VERSION}"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "NoRepair" 1
-  DetailPrint "✔️ Реестр обновлён"
+  DetailPrint "[OK] Реестр обновлён"
 
   WriteUninstaller "${UNINSTALL_EXE}"
-  DetailPrint "✔️ Uninstaller создан"
+  DetailPrint "[OK] Uninstaller создан"
 
   nsExec::ExecToStack '"$INSTDIR\agent_service.exe" install'
   Pop $0
   ${If} $0 != 0
-    DetailPrint "❌ Ошибка установки службы (код $0)"
-    MessageBox MB_ICONSTOP "❌ Не удалось установить службу"
+    DetailPrint "[ERROR] Установка службы не удалась (код $0)"
+    MessageBox MB_ICONSTOP "Не удалось установить службу"
   ${Else}
-    DetailPrint "✔️ Служба установлена"
+    DetailPrint "[OK] Служба установлена"
   ${EndIf}
 
   nsExec::ExecToStack '"$INSTDIR\agent_service.exe" start'
   Pop $0
   ${If} $0 != 0
-    DetailPrint "❌ Ошибка запуска службы (код $0)"
-    MessageBox MB_ICONSTOP "❌ Не удалось запустить службу"
+    DetailPrint "[ERROR] Ошибка запуска службы (код $0)"
+    MessageBox MB_ICONSTOP "Не удалось запустить службу"
   ${Else}
-    DetailPrint "✔️ Служба запущена"
+    DetailPrint "[OK] Служба запущена"
   ${EndIf}
 
-  DetailPrint "--- Установка завершена ---"
+  DetailPrint "[INFO] Установка завершена"
 SectionEnd
 
 
 Section "Uninstall"
-  DetailPrint "--- Удаление начато ---"
+  DetailPrint "[INFO] Удаление начато"
 
   nsExec::ExecToStack '"$INSTDIR\agent_service.exe" remove'
   Pop $0
   ${If} $0 != 0
-    DetailPrint "⚠️ Ошибка при удалении службы (код $0)"
+    DetailPrint "[ERROR] Ошибка при удалении службы (код $0)"
   ${Else}
-    DetailPrint "✔️ Служба удалена"
+    DetailPrint "[OK] Служба удалена"
   ${EndIf}
 
   Sleep 2000
@@ -69,14 +69,14 @@ Section "Uninstall"
   Delete "$INSTDIR\agent_service.exe"
   Delete "$INSTDIR\agent.log"
   Delete "${UNINSTALL_EXE}"
-  DetailPrint "✔️ Файлы удалены"
+  DetailPrint "[OK] Файлы удалены"
 
   RMDir "$INSTDIR"
-  DetailPrint "✔️ Папка удалена"
+  DetailPrint "[OK] Папка удалена"
 
   DeleteRegKey HKLM "Software\Agent"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent"
-  DetailPrint "✔️ Реестр очищен"
+  DetailPrint "[OK] Реестр очищен"
 
-  DetailPrint "--- Удаление завершено ---"
+  DetailPrint "[INFO] Удаление завершено"
 SectionEnd

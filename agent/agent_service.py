@@ -45,6 +45,15 @@ class AgentService(win32serviceutil.ServiceFramework):
         self._log("Service stopping...")
 
     def run_agent(self):
+        try:
+            application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+            os.chdir(application_path)  # <-- фикс: устанавливаем рабочую директорию
+
+            self._log(f"Working directory set to: {application_path}")
+        except:
+            print(f">>> run_agent: Error while os.chdir{application_path}")
+            sys.exit(1)
+
         self._log("Entered run_agent()")
         print(">>> run_agent() entered")
 

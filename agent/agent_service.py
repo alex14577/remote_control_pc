@@ -7,6 +7,7 @@ import win32serviceutil
 import pywintypes
 import threading
 import time
+import servicemanager
 
 
 class AgentService(win32serviceutil.ServiceFramework):
@@ -22,43 +23,48 @@ class AgentService(win32serviceutil.ServiceFramework):
 
     def SvcStop(self):
         self._log("SvcStop called")
+        servicemanager.LogInfoMsg("AgentService: Stopping service.")
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         if self.process and self.process.poll() is None:
             try:
                 self.process.terminate()
                 self._log("Terminated agent.exe")
+                servicemanager.LogInfoMsg("AgentService: agent.exe terminated.")
             except Exception as e:
                 self._log(f"Failed to terminate agent.exe: {e}")
         win32event.SetEvent(self.stop_event)
 
     def SvcDoRun(self):
         self._log("SvcDoRun called")
+        servicemanager.LogInfoMsg("AgentService: Starting service.")
         print(">>> SvcDoRun called")
 
-        # Запуск run_agent в отдельном потоке, чтобы не блокировать SvcDoRun
         thread = threading.Thread(target=self.run_agent, daemon=True)
         thread.start()
         self._log("Thread for run_agent started")
 
-        # Ожидаем сигнал остановки службы
         win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
         self._log("Service stopping...")
+        servicemanager.LogInfoMsg("AgentService: Service stopping...")
 
     def run_agent(self):
         try:
             application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
-            os.chdir(application_path)  # <-- фикс: устанавливаем рабочую директорию
-
+            os.chdir(application_path)
             self._log(f"Working directory set to: {application_path}")
-        except:
-            print(f">>> run_agent: Error while os.chdir{application_path}")
+            servicemanager.LogInfoMsg(f"AgentService: Working directory set to {application_path}")
+        except Exception as e:
+            msg = f"run_agent: Error setting working directory: {e}"
+            print(msg)
+            self._log(msg)
+            servicemanager.LogInfoMsg("AgentService: Failed to set working directory.")
             sys.exit(1)
 
         self._log("Entered run_agent()")
         print(">>> run_agent() entered")
 
         try:
-            base = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+            base = application_path
             agent = os.path.join(base, "agent.exe")
             config = os.path.join(base, "config.json")
             log_file_path = os.path.join(base, "agent.log")
@@ -68,9 +74,11 @@ class AgentService(win32serviceutil.ServiceFramework):
 
             if not os.path.exists(agent):
                 self._log("ERROR: agent.exe not found!")
+                servicemanager.LogInfoMsg("AgentService: agent.exe not found.")
                 return
             if not os.path.exists(config):
                 self._log("ERROR: config.json not found!")
+                servicemanager.LogInfoMsg("AgentService: config.json not found.")
                 return
 
             with open(log_file_path, "a", buffering=1, encoding="utf-8") as log_file:
@@ -80,14 +88,16 @@ class AgentService(win32serviceutil.ServiceFramework):
                     stderr=subprocess.STDOUT
                 )
                 self._log("agent.exe started")
+                servicemanager.LogInfoMsg("AgentService: agent.exe started.")
                 self.process.wait()
                 self._log(f"agent.exe exited with code {self.process.returncode}")
+                servicemanager.LogInfoMsg(f"AgentService: agent.exe exited with code {self.process.returncode}")
 
-            # Если процесс завершился — инициируем остановку службы
             win32event.SetEvent(self.stop_event)
 
         except Exception as e:
             self._log(f"ERROR: Failed to start agent.exe: {e}")
+            servicemanager.LogInfoMsg(f"AgentService: Exception occurred: {e}")
             win32event.SetEvent(self.stop_event)
 
     def _log(self, msg):
@@ -112,7 +122,6 @@ def service_exists(name):
 
 
 if __name__ == "__main__":
-
     application_path = os.path.dirname(sys.executable)
     os.chdir(application_path)
 

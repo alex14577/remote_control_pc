@@ -5,6 +5,8 @@ import win32event
 import win32service
 import win32serviceutil
 import pywintypes
+import threading
+import time
 
 
 class AgentService(win32serviceutil.ServiceFramework):
@@ -33,22 +35,35 @@ class AgentService(win32serviceutil.ServiceFramework):
         self._log("SvcDoRun called")
         print(">>> SvcDoRun called")
 
-        base = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
-        agent = os.path.join(base, "agent.exe")
-        config = os.path.join(base, "config.json")
-        log_file_path = os.path.join(base, "agent.log")
+        # Запуск run_agent в отдельном потоке, чтобы не блокировать SvcDoRun
+        thread = threading.Thread(target=self.run_agent, daemon=True)
+        thread.start()
+        self._log("Thread for run_agent started")
 
-        self._log(f"Agent path: {agent}")
-        self._log(f"Config path: {config}")
+        # Ожидаем сигнал остановки службы
+        win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
+        self._log("Service stopping...")
 
-        if not os.path.exists(agent):
-            self._log(f"ERROR: agent.exe not found at {agent}")
-            return
-        if not os.path.exists(config):
-            self._log(f"ERROR: config.json not found at {config}")
-            return
+    def run_agent(self):
+        self._log("Entered run_agent()")
+        print(">>> run_agent() entered")
 
         try:
+            base = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+            agent = os.path.join(base, "agent.exe")
+            config = os.path.join(base, "config.json")
+            log_file_path = os.path.join(base, "agent.log")
+
+            self._log(f"Agent path: {agent}")
+            self._log(f"Config path: {config}")
+
+            if not os.path.exists(agent):
+                self._log("ERROR: agent.exe not found!")
+                return
+            if not os.path.exists(config):
+                self._log("ERROR: config.json not found!")
+                return
+
             with open(log_file_path, "a", buffering=1, encoding="utf-8") as log_file:
                 self.process = subprocess.Popen(
                     [agent, "-f", config],
@@ -57,23 +72,22 @@ class AgentService(win32serviceutil.ServiceFramework):
                 )
                 self._log("agent.exe started")
                 self.process.wait()
-                self._log("agent.exe exited")
+                self._log(f"agent.exe exited with code {self.process.returncode}")
+
+            # Если процесс завершился — инициируем остановку службы
+            win32event.SetEvent(self.stop_event)
+
         except Exception as e:
             self._log(f"ERROR: Failed to start agent.exe: {e}")
-            return
-
-        win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
+            win32event.SetEvent(self.stop_event)
 
     def _log(self, msg):
         try:
-            with open(os.path.join(os.path.dirname(__file__), "agent_service.log"), "a", encoding="utf-8") as f:
-                f.write(f"[{self._timestamp()}] {msg}\n")
-        except Exception as e:
-            print(f"Logging failed: {e}")
-
-    def _timestamp(self):
-        import time
-        return time.strftime("%Y-%m-%d %H:%M:%S")
+            log_path = os.path.join(os.path.dirname(__file__), "agent_service.log")
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+        except Exception:
+            pass
 
 
 def service_exists(name):
@@ -120,7 +134,7 @@ if __name__ == "__main__":
         try:
             win32serviceutil.RemoveService(name)
             print("🗑️ Service removed")
-        except Exception as e:  
+        except Exception as e:
             print(f"❌ Remove failed: {e}")
 
     else:

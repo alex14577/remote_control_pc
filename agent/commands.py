@@ -93,69 +93,68 @@ async def handle_reboot(_, websocket):
     logger.info("🔄 Перезагрузка (заглушка)")
     # os.system("shutdown /r /t 1")
 
-@register_command("launch_game")
 
 @register_command("launch_game")
 async def handle_launch_game(data, websocket):
-    logger.info("Execute launch_game")
+    logger.info("Command received: launch_game")
+
     name = data.get("name")
+    logger.info(f"Requested name: '{name}'")
 
-    logger.info(f"name: '{name}'")
-
-    entry = stored_games.get(name)
+    entry = stored_games.get(name) or stored_programs.get(name)
+    logger.info(f"Entry resolved: {entry}")
 
     if not entry:
-        entry = stored_programs.get(name)
-
-    logger.info(f"entry: '{entry}'")
-
-    if entry:
-        path = entry.get("path")
-
-        if not path:
-            await websocket.send(json.dumps({
-                "type": "launch_ack",
-                "status": "not_found",
-                "name": name
-            }))
-            return
-
-        try:
-            if path.startswith("steam://"):                
-                subprocess.Popen(["explorer", f"{path}/bp"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            else:
-                if path.lower().endswith(".lnk"):
-                    # Ярлык — через explorer
-                    subprocess.Popen(["explorer", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                else:
-                    # На всякий случай: exe напрямую
-                    folder = os.path.dirname(path)
-                    subprocess.Popen([path], cwd=folder, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            logger.info(f"🎮 Запущено: {name}")
-            await websocket.send(json.dumps({
-                "type": "launch_ack",
-                "status": "ok",
-                "name": name
-            }))
-
-        except Exception as e:
-            logger.error(f"❌ Ошибка запуска: {e}")
-            await websocket.send(json.dumps({
-                "type": "launch_ack",
-                "status": "error",
-                "name": name,
-                "message": str(e)
-            }))
-
-    else:
+        logger.info("No matching entry found, sending not_found")
         await websocket.send(json.dumps({
             "type": "launch_ack",
             "status": "not_found",
             "name": name
         }))
+        return
 
+    path = entry.get("path")
+    logger.info(f"Resolved path: {path}")
+
+    if not path:
+        logger.info("Entry has no path, sending not_found")
+        await websocket.send(json.dumps({
+            "type": "launch_ack",
+            "status": "not_found",
+            "name": name
+        }))
+        return
+
+    try:
+        if path.startswith("steam://"):
+            logger.info("Launching via Steam URL")
+            subprocess.Popen(["explorer", f"{path}/bp"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        elif path.lower().endswith(".lnk"):
+            logger.info("Launching .lnk shortcut")
+            subprocess.Popen(["explorer", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        else:
+            folder = os.path.dirname(path)
+            logger.info(f"Launching direct executable in: {folder}")
+            subprocess.Popen([path], cwd=folder, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        logger.info(f"✅ Launch successful: {name}")
+        await websocket.send(json.dumps({
+            "type": "launch_ack",
+            "status": "ok",
+            "name": name
+        }))
+
+    except Exception as e:
+        logger.error(f"❌ Launch error: {e}")
+        await websocket.send(json.dumps({
+            "type": "launch_ack",
+            "status": "error",
+            "name": name,
+            "message": str(e)
+        }))
+        
 def normalize_name(name: str) -> str:
     if not name:
         return ""

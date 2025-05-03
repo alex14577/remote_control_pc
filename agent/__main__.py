@@ -16,13 +16,10 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 logging.basicConfig(
-    filename="agent.log",
-    filemode="a",
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    format='%(name)s | %(filename)s:%(lineno)d | %(asctime)s | %(levelname)s | %(message)s',
+    datefmt='%Y-%m-%d | %H:%M:%S'
 )
-
-print = logging.info
 
 
 def main():

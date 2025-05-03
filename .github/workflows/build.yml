@@ -51,6 +51,7 @@ jobs:
 
       - name: Build executables
         run: |
+          export PYTHONOPTIMIZE=${{ env.OPTIMIZATION }}
           .venv/bin/pyinstaller --onefile --name=agent agent/__main__.py
           .venv/bin/pyinstaller --onefile --name=bot bot/__main__.py
 
@@ -129,9 +130,10 @@ jobs:
 
       - name: Build executables
         run: |
-          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
-          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
-          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
+          $env:PYTHONOPTIMIZE = "0"
+          .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
+          .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
+          .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
 
 
       - name: Package Windows

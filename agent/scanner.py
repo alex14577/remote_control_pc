@@ -4,29 +4,24 @@ from typing import List, Dict
 import pylnk3
 import psutil
 import unicodedata
-from pathlib import Path
 
 from agent.logger import Logger
 
 logger = Logger().Get("scanner")
 
 def get_all_desktop_paths() -> List[str]:
-    paths = set()
+    """
+    Возвращает список путей к рабочему столу текущего пользователя.
+    """
+    paths = []
 
     userprofile = os.environ.get("USERPROFILE")
     if userprofile:
-        paths.add(os.path.join(userprofile, "Desktop"))
+        desktop = os.path.join(userprofile, "Desktop")
+        if os.path.exists(desktop):
+            paths.append(desktop)
 
-    # paths.add("C:\\Users\\Public\\Desktop")
-
-    base = Path("C:/Users")
-    if base.exists():
-        for user_dir in base.iterdir():
-            desktop = user_dir / "Desktop"
-            if desktop.exists():
-                paths.add(str(desktop))
-
-    return sorted(paths)
+    return paths
 
 
 def scan_installed() -> Dict[str, List[Dict[str, str]]]:

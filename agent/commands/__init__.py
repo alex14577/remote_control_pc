@@ -1,0 +1,22 @@
+import json
+from agent.logger import Logger
+
+logger = Logger().Get("commands")
+
+handlers = {}
+
+def register_command(name):
+    def decorator(fn):
+        handlers[name] = fn
+        logger.info(f"Registered command: {name}")
+        return fn
+    return decorator
+
+async def handle_command(message, websocket):
+    logger.info(f"📥 Incoming message: {message}")
+    command = message.get("type")
+    handler = handlers.get(command)
+    if handler:
+        await handler(message, websocket)
+    else:
+        logger.error(f"⚠️ Unknown command: {command}")

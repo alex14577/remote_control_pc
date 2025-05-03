@@ -8,7 +8,9 @@ from agent.commands import handle_command
 
 connected_clients = set()
 
-logger = logging.getLogger("handler")
+from agent.logger import Logger
+
+logger = Logger().Get("handler")
 
 async def handler(websocket):
     logger.info("🤝 Клиент подключился")

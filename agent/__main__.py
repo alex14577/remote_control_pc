@@ -8,7 +8,7 @@ import json
 
 from agent.agent import run_agent
 
-from logger import Logger
+from agent.logger import Logger
 
 def main():
     level = Logger.Level.INFO if __debug__ else Logger.Level.ERROR

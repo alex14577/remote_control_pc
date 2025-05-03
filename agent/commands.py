@@ -1,11 +1,12 @@
 import json
 import subprocess, os, unicodedata, psutil
+
 from agent.system_info import get_system_info
 from agent.scanner import scan_installed
-from logger import Logger
+from agent.logger import Logger
 
 
-logger = Logger.Get("commands")
+logger = Logger().Get("commands")
 
 # Словарь с зарегистрированными командами
 handlers = {}

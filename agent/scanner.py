@@ -5,7 +5,8 @@ import pylnk3
 import psutil
 import unicodedata
 from pathlib import Path
-from logger import Logger
+
+from agent.logger import Logger
 
 logger = Logger().Get("scanner")
 

@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+env:
+  OPTIMIZATION: 0
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -126,9 +129,9 @@ jobs:
 
       - name: Build executables
         run: |
-          .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
-          .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
-          .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
+          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --name=agent agent\__main__.py
+          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --name=bot bot\__main__.py
+          PYTHONOPTIMIZE=${{ env.OPTIMIZATION }} .\.venv\Scripts\pyinstaller.exe --onefile --hidden-import=win32timezone --name=agent_service agent\agent_service.py
 
 
       - name: Package Windows

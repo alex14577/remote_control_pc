@@ -14,9 +14,6 @@ def register_command(name):
         return fn
     return decorator
 
-# 💡 Импортируем все подмодули commands после объявления register_command
-for loader, name, _ in pkgutil.iter_modules(__path__):
-    importlib.import_module(f"{__name__}.{name}")
 
 # Обработчик всех входящих команд
 async def handle_command(message, websocket):
@@ -27,3 +24,6 @@ async def handle_command(message, websocket):
         await handler(message, websocket)
     else:
         logger.error(f"⚠️ Unknown command: {command}")
+
+from agent.commands import system
+from agent.commands import games

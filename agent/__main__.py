@@ -8,6 +8,19 @@ import json
 
 from agent.agent import run_agent
 
+import logging
+import io
+
+# Заменить stdout и stderr на UTF-8
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(name)s | %(filename)s:%(lineno)d | %(asctime)s | %(levelname)s | %(message)s',
+    datefmt='%Y-%m-%d | %H:%M:%S'
+)
+
 
 def main():
     parser = argparse.ArgumentParser(description="PC Agent")

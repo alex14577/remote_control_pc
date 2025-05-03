@@ -8,6 +8,7 @@ import pywintypes
 import threading
 import time
 import servicemanager
+import psutil
 
 
 class AgentService(win32serviceutil.ServiceFramework):
@@ -43,6 +44,11 @@ class AgentService(win32serviceutil.ServiceFramework):
         servicemanager.LogInfoMsg("AgentService: stopped.")
 
     def run_agent(self):
+        if self._is_already_running():
+            self._log("agent.exe is already running, skipping launch")
+            servicemanager.LogInfoMsg("AgentService: agent.exe is already running, skipping launch.")
+            return
+
         try:
             application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
             os.chdir(application_path)
@@ -98,6 +104,13 @@ class AgentService(win32serviceutil.ServiceFramework):
         except Exception:
             pass
 
+    def _is_already_running(self):
+        for p in psutil.process_iter(['name', 'pid']):
+            if p.info['name'] == 'agent.exe':
+                if self.process is None or p.pid != self.process.pid:
+                    return True
+        return False
+
 
 def service_exists(name):
     try:
@@ -114,13 +127,10 @@ def service_exists(name):
 if __name__ == "__main__":
     name = AgentService._svc_name_
 
-    # Установим рабочую директорию на папку exe, чтобы пути работали
     application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
     os.chdir(application_path)
 
     if len(sys.argv) == 1:
-        # ✔ Правильный запуск службы через StartServiceCtrlDispatcher
-        import servicemanager
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(AgentService)
         servicemanager.StartServiceCtrlDispatcher()
@@ -135,18 +145,20 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Remove failed: {e}")
     elif sys.argv[1].lower() == "install":
-        try:
-            win32serviceutil.InstallService(
-                pythonClassString="__main__.AgentService",  # ВАЖНО: __main__, а не имя файла
-                serviceName=name,
-                displayName=AgentService._svc_display_name_,
-                description=AgentService._svc_description_,
-                exeName=sys.executable,
-                startType=win32service.SERVICE_AUTO_START
-            )
-            print("Service installed")
-        except Exception as e:
-            print(f"Install failed: {e}")
-
+        if not service_exists(name):
+            try:
+                win32serviceutil.InstallService(
+                    pythonClassString="__main__.AgentService",
+                    serviceName=name,
+                    displayName=AgentService._svc_display_name_,
+                    description=AgentService._svc_description_,
+                    exeName=sys.executable,
+                    startType=win32service.SERVICE_AUTO_START
+                )
+                print("Service installed")
+            except Exception as e:
+                print(f"Install failed: {e}")
+        else:
+            print("Service already exists")
     else:
         win32serviceutil.HandleCommandLine(AgentService)

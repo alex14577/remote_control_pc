@@ -3,32 +3,52 @@
 import asyncio
 import json
 import websockets
+from typing import Callable, Awaitable
 
 from agent.logger import Logger
-from agent.commands import handle_command
 
-connected_clients = set()
+logger = Logger().Get("agent")
 
+class Agent:
+    def __init__(self):
+        self.handlers: dict[str, Callable[[dict, websockets.WebSocketServerProtocol], Awaitable[None]]] = {}
+        self.connected_clients = set()
 
-logger = Logger().Get("handler")
+    def register(self, command_name: str):
+        def decorator(fn: Callable[[dict, websockets.WebSocketServerProtocol], Awaitable[None]]):
+            if command_name in self.handlers:
+                logger.warning(f"Command '{command_name}' is already registered. Overwriting.")
+            else:
+                logger.info(f"Registered command: {command_name}")
+            self.handlers[command_name] = fn
+            return fn
+        return decorator
 
-async def handler(websocket):
-    logger.info("🤝 Клиент подключился")
-    connected_clients.add(websocket)
-    try:
-        async for message in websocket:
-            try:
-                command = json.loads(message)
-                await handle_command(command, websocket)
-            except Exception as e:
-                logger.error(f"⚠️ Ошибка при обработке команды: {e}")
-    except websockets.ConnectionClosed:
-        logger.info("❌ Клиент отключился")
-    finally:
-        connected_clients.remove(websocket)
+    async def handle(self, message: dict, websocket: websockets.WebSocketServerProtocol):
+        command = message.get("type")
+        handler = self.handlers.get(command)
+        if handler:
+            await handler(message, websocket)
+        else:
+            logger.error(f"\u26a0\ufe0f Unknown command: {command}")
 
+    async def handler(self, websocket: websockets.WebSocketServerProtocol):
+        logger.info("\U0001f91d Client connected")
+        self.connected_clients.add(websocket)
+        try:
+            async for message in websocket:
+                try:
+                    command = json.loads(message)
+                    await self.handle(command, websocket)
+                except Exception as e:
+                    logger.error(f"\u26a0\ufe0f Error handling command: {e}")
+        except websockets.ConnectionClosed:
+            logger.info("❌ Client disconnected")
+        finally:
+            self.connected_clients.remove(websocket)
 
-async def run_agent(host: str, port: int):
-    logger.info(f"🚀 Агент слушает на {host}:{port}")
-    async with websockets.serve(handler, host, port):
-        await asyncio.Future()  # run forever
+    async def run(self, host: str, port: int):
+        logger.info(f"\U0001f680 Agent listening on {host}:{port}")
+        async with websockets.serve(self.handler, host, port):
+            await asyncio.Future()  # run forever
+

@@ -1,29 +1,33 @@
-from agent.logger import Logger
-import importlib
-import pkgutil
+# agent/commands/__init__.py
 
-logger = Logger().Get("commands")
+from agent.agent import Agent
 
-# Хранилище зарегистрированных обработчиков
-handlers = {}
+from agent.commands.system import (
+    GetInfoCommand,
+    PingCommand,
+    ShutdownCommand,
+    RebootCommand,
+)
 
-def register_command(name):
-    def decorator(fn):
-        handlers[name] = fn
-        logger.info(f"Registered command: {name}")
-        return fn
-    return decorator
+from agent.commands.games import (
+    ListGamesCommand,
+    LaunchGameCommand,
+    CloseGameCommand,
+)
 
 
-# Обработчик всех входящих команд
-async def handle_command(message, websocket):
-    logger.info(f"📥 Incoming message: {message}")
-    command = message.get("type")
-    handler = handlers.get(command)
-    if handler:
-        await handler(message, websocket)
-    else:
-        logger.error(f"⚠️ Unknown command: {command}")
+def create_agent() -> Agent:
+    agent = Agent()
 
-from agent.commands import system
-from agent.commands import games
+    # Системные команды
+    GetInfoCommand(agent)
+    PingCommand(agent)
+    ShutdownCommand(agent)
+    RebootCommand(agent)
+
+    # Игровые команды
+    ListGamesCommand(agent)
+    LaunchGameCommand(agent)
+    CloseGameCommand(agent)
+
+    return agent

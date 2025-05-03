@@ -1,48 +1,82 @@
 !include "MUI2.nsh"
 !define VERSION "$%VERSION%"
 
+RequestExecutionLevel admin
+
 Outfile "installer-agent-windows-v${VERSION}.exe"
 InstallDir "$PROGRAMFILES\Agent"
 InstallDirRegKey HKLM "Software\Agent" "Install_Dir"
 
 !define UNINSTALL_EXE "$INSTDIR\uninstall.exe"
 
-; Добавим логотип/иконку, если хочешь — напомни
-
-; Главная секция установки
 Section "Install Agent"
   SetOutPath "$INSTDIR"
+  DetailPrint "[INFO] Installation started"
+
   File "..\dist\agent.exe"
   File "..\agent\config.json"
+  File "..\dist\agent_service.exe"
+  DetailPrint "[OK] Files copied"
 
-  ; Сохраняем путь
   WriteRegStr HKLM "Software\Agent" "Install_Dir" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "DisplayName" "Agent Service"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "DisplayVersion" "${VERSION}"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent" "NoRepair" 1
+  DetailPrint "[OK] Registry updated"
 
-  ; Сохраняем сам uninstall.exe
   WriteUninstaller "${UNINSTALL_EXE}"
+  DetailPrint "[OK] Uninstaller created"
 
-  ; Создаём и запускаем службу
-  nsExec::Exec 'sc.exe create AgentService binPath= "\"$INSTDIR\agent.exe\"" start= auto DisplayName= "Agent Service"'
-  nsExec::Exec 'sc.exe failure "AgentService" reset= 60 actions= restart/5000'
-  nsExec::Exec 'sc.exe start AgentService'
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe" install'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "[ERROR] Service installation failed (code $0)"
+    MessageBox MB_ICONSTOP "Failed to install the service"
+  ${Else}
+    DetailPrint "[OK] Service installed"
+  ${EndIf}
+
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe" start'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "[ERROR] Service failed to start (code $0)"
+    MessageBox MB_ICONSTOP "Failed to start the service"
+  ${Else}
+    DetailPrint "[OK] Service started"
+  ${EndIf}
+
+  DetailPrint "[INFO] Installation complete"
 SectionEnd
 
-; Секция удаления
+
 Section "Uninstall"
-  nsExec::Exec 'sc.exe stop AgentService'
+  DetailPrint "[INFO] Uninstallation started"
+
+  nsExec::ExecToStack '"$INSTDIR\agent_service.exe" remove'
+  Pop $0
+  ${If} $0 != 0
+    DetailPrint "[ERROR] Failed to remove service (code $0)"
+  ${Else}
+    DetailPrint "[OK] Service removed"
+  ${EndIf}
+
   Sleep 2000
-  nsExec::Exec 'sc.exe delete AgentService'
 
   Delete "$INSTDIR\agent.exe"
   Delete "$INSTDIR\config.json"
+  Delete "$INSTDIR\agent_service.exe"
+  Delete "$INSTDIR\agent.log"
   Delete "${UNINSTALL_EXE}"
+  DetailPrint "[OK] Files deleted"
+
   RMDir "$INSTDIR"
+  DetailPrint "[OK] Folder removed"
 
   DeleteRegKey HKLM "Software\Agent"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Agent"
+  DetailPrint "[OK] Registry cleaned"
+
+  DetailPrint "[INFO] Uninstallation complete"
 SectionEnd

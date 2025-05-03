@@ -8,8 +8,14 @@ import json
 
 from agent.agent import run_agent
 
+from logger import Logger
 
 def main():
+    level = Logger.Level.INFO if __debug__ else Logger.Level.ERROR
+    logger = Logger(level, "agent.txt").Get("main")
+
+    logger.info("Agent is starting")
+
     parser = argparse.ArgumentParser(description="PC Agent")
     parser.add_argument("-f", "--file", required=True, help="Путь до config.json")
     args = parser.parse_args()

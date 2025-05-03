@@ -3,7 +3,7 @@ Description=Bot Service
 After=network.target
 
 [Service]
-ExecStart=/opt/bot/bot -f /opt/bot/config.json
+ExecStart=/opt/bot/bot/bot -f /opt/bot/bot/config.json
 Restart=always
 
 [Install]

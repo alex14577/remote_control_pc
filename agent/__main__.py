@@ -6,10 +6,17 @@ import os
 import sys
 import json
 
-from agent.agent import run_agent
+from agent.commands import create_agent
 
+
+from agent.logger import Logger
 
 def main():
+    level = Logger.Level.INFO if __debug__ else Logger.Level.ERROR
+    logger = Logger(level, "agent.txt").Get("main")
+
+    logger.info("Agent is starting")
+
     parser = argparse.ArgumentParser(description="PC Agent")
     parser.add_argument("-f", "--file", required=True, help="Путь до config.json")
     args = parser.parse_args()
@@ -25,7 +32,10 @@ def main():
     host = config.get("host", "0.0.0.0")
     port = config.get("port", 33444)
 
-    asyncio.run(run_agent(host, port))
+    agent = create_agent()
+
+
+    asyncio.run(agent.run(host, port))
 
 
 if __name__ == "__main__":

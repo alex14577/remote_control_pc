@@ -1,0 +1,164 @@
+import os
+import sys
+import subprocess
+import win32event
+import win32service
+import win32serviceutil
+import pywintypes
+import threading
+import time
+import servicemanager
+import psutil
+
+
+class AgentService(win32serviceutil.ServiceFramework):
+    _svc_name_ = "AgentService"
+    _svc_display_name_ = "Agent Service"
+    _svc_description_ = "Runs agent.exe with config.json"
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.stop_event = win32event.CreateEvent(None, 0, 0, None)
+        self.process = None
+        self._log("Initialized AgentService")
+
+    def SvcStop(self):
+        self._log("SvcStop called")
+        servicemanager.LogInfoMsg("AgentService: stopping...")
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        if self.process and self.process.poll() is None:
+            try:
+                self.process.terminate()
+                self._log("Terminated agent.exe")
+                servicemanager.LogInfoMsg("AgentService: agent.exe terminated.")
+            except Exception as e:
+                self._log(f"Failed to terminate agent.exe: {e}")
+        win32event.SetEvent(self.stop_event)
+
+    def SvcDoRun(self):
+        self._log("SvcDoRun called")
+        servicemanager.LogInfoMsg("AgentService: starting...")
+        threading.Thread(target=self.run_agent, daemon=True).start()
+        win32event.WaitForSingleObject(self.stop_event, win32event.INFINITE)
+        self._log("Service stopping...")
+        servicemanager.LogInfoMsg("AgentService: stopped.")
+
+    def run_agent(self):
+        if self._is_already_running():
+            self._log("agent.exe is already running, skipping launch")
+            servicemanager.LogInfoMsg("AgentService: agent.exe is already running, skipping launch.")
+            return
+
+        try:
+            application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+            os.chdir(application_path)
+            self._log(f"Working directory set to: {application_path}")
+            servicemanager.LogInfoMsg(f"AgentService: working dir set to {application_path}")
+        except Exception as e:
+            self._log(f"ERROR: Failed to set working dir: {e}")
+            servicemanager.LogInfoMsg("AgentService: failed to set working dir.")
+            return
+
+        self._log("Entered run_agent()")
+
+        try:
+            agent = os.path.join(application_path, "agent.exe")
+            config = os.path.join(application_path, "config.json")
+            log_file_path = os.path.join(application_path, "agent.log")
+
+            self._log(f"Agent path: {agent}")
+            self._log(f"Config path: {config}")
+
+            if not os.path.exists(agent):
+                self._log("ERROR: agent.exe not found!")
+                servicemanager.LogInfoMsg("AgentService: agent.exe not found.")
+                return
+            if not os.path.exists(config):
+                self._log("ERROR: config.json not found!")
+                servicemanager.LogInfoMsg("AgentService: config.json not found.")
+                return
+
+            with open(log_file_path, "a", buffering=1, encoding="utf-8") as log_file:
+                self.process = subprocess.Popen(
+                    [agent, "-f", config],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT
+                )
+                self._log("agent.exe started")
+                servicemanager.LogInfoMsg("AgentService: agent.exe started.")
+                self.process.wait()
+                self._log(f"agent.exe exited with code {self.process.returncode}")
+                servicemanager.LogInfoMsg(f"AgentService: agent.exe exited ({self.process.returncode})")
+
+        except Exception as e:
+            self._log(f"ERROR: Failed to start agent.exe: {e}")
+            servicemanager.LogInfoMsg(f"AgentService: startup failed: {e}")
+
+        win32event.SetEvent(self.stop_event)
+
+    def _log(self, msg):
+        try:
+            log_path = os.path.join(os.path.dirname(__file__), "agent_service.log")
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
+        except Exception:
+            pass
+
+    def _is_already_running(self):
+        for p in psutil.process_iter(['name', 'pid']):
+            if p.info['name'] == 'agent.exe':
+                if self.process is None or p.pid != self.process.pid:
+                    return True
+        return False
+
+
+def service_exists(name):
+    try:
+        win32serviceutil.QueryServiceStatus(name)
+        return True
+    except pywintypes.error as e:
+        if hasattr(e, 'winerror') and e.winerror == 1060:
+            return False
+        elif e.args and e.args[0] == 1060:
+            return False
+        raise
+
+
+if __name__ == "__main__":
+    name = AgentService._svc_name_
+
+    application_path = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(__file__)
+    os.chdir(application_path)
+
+    if len(sys.argv) == 1:
+        servicemanager.Initialize()
+        servicemanager.PrepareToHostSingle(AgentService)
+        servicemanager.StartServiceCtrlDispatcher()
+    elif sys.argv[1].lower() == "remove":
+        try:
+            win32serviceutil.StopService(name)
+        except Exception:
+            pass
+        try:
+            win32serviceutil.RemoveService(name)
+            print("Service removed")
+        except Exception as e:
+            print(f"Remove failed: {e}")
+    elif sys.argv[1].lower() == "install":
+        if not service_exists(name):
+            try:
+                win32serviceutil.InstallService(
+                    pythonClassString="__main__.AgentService",
+                    serviceName=name,
+                    displayName=AgentService._svc_display_name_,
+                    description=AgentService._svc_description_,
+                    exeName=sys.executable,
+                    startType=win32service.SERVICE_AUTO_START
+                )
+                print("Service installed")
+            except Exception as e:
+                print(f"Install failed: {e}")
+        else:
+            print("Service already exists")
+    else:
+        win32serviceutil.HandleCommandLine(AgentService)

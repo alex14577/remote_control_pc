@@ -3,12 +3,12 @@
 import asyncio
 import json
 import websockets
-import logging
+
+from agent.logger import Logger
 from agent.commands import handle_command
 
 connected_clients = set()
 
-from agent.logger import Logger
 
 logger = Logger().Get("handler")
 

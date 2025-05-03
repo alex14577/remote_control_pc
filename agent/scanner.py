@@ -17,7 +17,7 @@ def get_all_desktop_paths() -> List[str]:
     if userprofile:
         paths.add(os.path.join(userprofile, "Desktop"))
 
-    paths.add("C:\\Users\\Public\\Desktop")
+    # paths.add("C:\\Users\\Public\\Desktop")
 
     base = Path("C:/Users")
     if base.exists():
